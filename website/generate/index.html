@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+    <title>QR Generator</title>
+    <head>
+        <script src="qrcodejs.min.js"></script>
+        <style>
+            body {
+                margin: 0;
+                font-family: Tahoma, sans-serif;
+            }
+            .container {
+                padding: 20px;
+            }
+            .wrapper {
+                text-align: center;
+                width: 500px;
+                max-width: 100%;
+                margin: 30px auto;
+            }
+            .wrapper img {
+                width: 100%;
+            }
+            .form {
+                margin-top: 30px;
+                line-height: 1;
+                display: flex;
+            }
+            .description {
+                text-align: center;
+            }
+            #content {
+                font-size: 50px;
+                text-align: center;
+                margin-right: 10px;
+                width: calc(100% - 72px);
+                box-sizing: border-box;
+                padding: 0;
+                border: 1px solid #ccc;
+            }
+            #reset {
+                width: 62px;
+                display: inline-block;
+                border: 0;
+                background-color: #626262;
+                height: 62px;
+                margin: 0;
+                border-radius: 3px;
+                touch-action: manipulation;
+            }
+            @media (orientation: landscape) {
+                .wrapper {
+                    width: 400px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <p class="description">Type anything in the box to create a QR Code.</p>
+            <div class="wrapper">
+                <div id="qrcode"></div>
+            </div>
+            <div class="form">
+                <input id="content" autocorrect="off" autocomplete="off" spellcheck="false">
+                <button id="reset">
+                    <svg width="30" height="33" xmlns="http://www.w3.org/2000/svg"><g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path d="M15 8v2.97l-.343.344L9 5.657 14.657 0 15 .343V3c8.284 0 15 6.716 15 15 0 8.284-6.716 15-15 15-8.284 0-15-6.716-15-15h5c0 5.523 4.477 10 10 10s10-4.477 10-10S20.523 8 15 8z" id="Combined-Shape" fill="#FFF"/></g></svg>
+                </button>
+            </div>
+        </div>
+        <script>
+            var content = document.getElementById('content');
+            var output = document.getElementById("qrcode");
+            var reset = document.getElementById("reset");
+
+            var qrcode = new QRCode(output, { width : 500, height : 500 });
+            qrcode.makeCode('');
+
+            function update() {
+                qrcode.makeCode(content.value);
+            }
+            content.addEventListener('keyup', update);
+            content.addEventListener('change', update);
+            content.addEventListener('keydown', function(e) {
+                if (e.keyCode == 13) {
+                    content.blur();
+                }
+            })
+            reset.addEventListener('click', function() {
+                content.value = '';
+                update();
+                content.focus();
+            });
+        </script>
+    </body>
+</html>

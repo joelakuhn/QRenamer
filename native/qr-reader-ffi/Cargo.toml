@@ -1,0 +1,11 @@
+[package]
+name = "qr-reader-ffi"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+name = "qr_reader_ffi"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+qr-reader = { path = "../qr-reader" }
