@@ -1,13 +1,9 @@
-use std::num::NonZeroU32;
-
 use image;
+use image::{Luma, ImageBuffer, GenericImageView, Pixel};
 use image::imageops::colorops::{index_colors, ColorMap};
-use image::{Luma, ImageBuffer};
 use image::io::Reader;
-use image::GenericImageView;
-use rqrr;
 
-use fast_image_resize as fr;
+use rqrr;
 
 #[derive(Clone, Copy)]
 pub struct Threshold {
@@ -53,7 +49,7 @@ fn constrain_size(orig_w : u32, orig_h : u32, max_dim : u32) -> (u32, u32) {
     let mut w = orig_w;
     let mut h = orig_h;
 
-    if w > max_dim || h > max_dim {
+    if w > (max_dim as f32 * 1.5) as u32 || h > (max_dim as f32 * 1.5) as u32 {
         if h > w {
             h = max_dim;
             w = ((orig_w as f32 / orig_h as f32) * max_dim as f32) as u32;
@@ -77,39 +73,34 @@ fn threshold(img : &ImageBuffer<Luma<u8>, Vec<u8>>, boundary : u8) -> ImageBuffe
     return bw_img;
 }
 
+#[inline]
+fn clamp(val : u32, min : u32, max : u32) -> u32 {
+    if val > max {
+        return max;
+    }
+    if val < min {
+        return min;
+    }
+    return val;
+}
+
 fn open_image(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
     let reader = Reader::open(path);
     if !reader.is_err() {
         let decoded_img = reader.unwrap().decode();
         if !decoded_img.is_err() {
             let img = decoded_img.unwrap();
-            let (w, h) = constrain_size(img.width(), img.height(), 1500);
-            let src_image = fr::ImageData::from_vec_u8(
-                NonZeroU32::new(img.width()).unwrap(),
-                NonZeroU32::new(img.height()).unwrap(),
-                img.to_rgba8().into_raw(),
-                fr::PixelType::U8x4,
-            ).unwrap();
-
-            let mut dst_img = fr::ImageData::new(
-                NonZeroU32::new(w).unwrap(),
-                NonZeroU32::new(h).unwrap(),
-                src_image.pixel_type(),
-            );
-
-            let mut dst_view = dst_img.dst_view();
-            let mut resizer = fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Mitchell));
-            resizer.resize(&src_image.src_view(), &mut dst_view);
-
-            let pixels = dst_img.get_buffer();
-
+            let img_width = img.width();
+            let img_height = img.height();
+            let (w, h) = constrain_size(img_width, img_height, 1500);
+            let w_ratio = img_width as f32 / w as f32;
+            let h_ratio = img_height as f32 / h as f32;
+            
             let luma_img = image::ImageBuffer::from_fn(w, h, |x, y| {
-                let offset = (x * 4 + y * 4 * w) as usize;
-                let r = pixels[offset] as f32;
-                let g = pixels[offset + 1] as f32;
-                let b = pixels[offset + 2] as f32;
-                let luma = (0.30 * r + 0.40 * g + 0.3 * b) as u8;
-                image::Luma([luma])
+                let neighbor_x = clamp((x as f32 * w_ratio) as u32, 0, img_width);
+                let neighbor_y = clamp((y as f32 * h_ratio) as u32, 0, img_height);
+                
+                img.get_pixel(neighbor_x, neighbor_y).to_luma()
             });
             
             return Some(luma_img);
@@ -117,7 +108,6 @@ fn open_image(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std:
     }
     return None;
 }
-
 
 pub fn read_qr(path : String) -> String {
     let img_result = open_image(&path);
