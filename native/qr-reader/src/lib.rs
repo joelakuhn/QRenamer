@@ -3,7 +3,11 @@ use image::{Luma, ImageBuffer, GenericImageView, Pixel};
 use image::imageops::colorops::{index_colors, ColorMap};
 use image::io::Reader;
 
+use std::path::Path;
+
 use rqrr;
+
+use rawloader;
 
 #[derive(Clone, Copy)]
 pub struct Threshold {
@@ -84,6 +88,52 @@ fn clamp(val : u32, min : u32, max : u32) -> u32 {
     return val;
 }
 
+fn get_average_pixel(data : &[u16], x : i32, y : i32, steps : i32, w : i32, h : i32) -> u16{
+    let mut pixels_found = 0;
+    let mut wide_pixel = 0u64;
+    for dx in -steps..(steps + 1) {
+        for dy in -steps..(steps + 1) {
+            if dx.abs() + dy.abs() <= steps {
+                let nx = x + dx;
+                let ny = y + dy;
+                if nx >= 0 && nx < w && ny >= 0 && ny < h {
+                    pixels_found += 1;
+                    let offset = (nx + ny * w) as usize;
+                    let px = data[offset];
+                    wide_pixel += px as u64;
+                }
+            }
+        }
+    }
+    return (wide_pixel as f32 / pixels_found as f32) as u16;
+}
+
+fn open_raw(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
+    let img = rawloader::decode_file(path).unwrap();
+
+    let (w, h) = constrain_size(img.width as u32, img.height as u32, 1500);
+    let img_width = img.width;
+    let img_height = img.height;
+    let w_ratio = img_width as f32 / w as f32;
+    let h_ratio = img_height as f32 / h as f32;
+
+    if let rawloader::RawImageData::Integer(data) = img.data {
+
+        let luma_img = image::ImageBuffer::from_fn(w, h, |x, y| {
+            let src_x = (x as f32 * w_ratio) as usize;
+            let src_y = (y as f32 * h_ratio) as usize;
+
+            let avg_px = get_average_pixel(&data, src_x as i32, src_y as i32, w_ratio as i32, img_width as i32, img_height as i32);
+            let px = ((avg_px as f32 / 0xfff as f32) * 0xff as f32) as u8;
+            image::Luma([px])
+        });
+        return Some(luma_img);
+    } else {
+        eprintln!("Don't know how to process non-integer raw files");
+    }
+    return None;
+}
+
 fn open_image(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
     let reader = Reader::open(path);
     if !reader.is_err() {
@@ -110,7 +160,19 @@ fn open_image(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std:
 }
 
 pub fn read_qr(path : String) -> String {
-    let img_result = open_image(&path);
+    let ext = Path::new(&path).extension();
+
+    if ext.is_some() {
+
+        let img_result = match String::from(ext.unwrap().to_str().unwrap()).to_lowercase().as_str() {
+            "jpg" | "jpeg" | "png" | "bmp" | "gif" | "tga" | "tiff" | "webp"
+                => open_image(&path),
+            "mrw" | "arw" | "srf" | "sr2" | "mef" | "orf" | "srw" | "erf" |
+            "kdc" | "dcs" | "rw2" | "raf" | "dcr" | "pef" | "crw" | "iiq" |
+            "3fr" | "nrw" | "nef" | "mos" | "cr2" | "ari"
+                => open_raw(&path),
+            _ => None
+        };
     
     if img_result.is_some() {
 
@@ -135,6 +197,8 @@ pub fn read_qr(path : String) -> String {
             }
 
             threshold_boundary -= 40;
+            }
+
         }
     }
     return String::from("");
