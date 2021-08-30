@@ -73,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // LOCALS
 
   List<UIFile> _files = [];
-  List<String> _imageExtensions = ['jpg', 'jpeg', 'png' ];
+  List<String> _imageExtensions = ['jpg', 'jpeg', 'png', 'bmp', 'gif', 'tga', 'tiff', 'webp' ];
   bool _isRunning = false;
   bool _dryRun = false;
   bool _isDropping = false;
