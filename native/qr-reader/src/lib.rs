@@ -174,29 +174,29 @@ pub fn read_qr(path : String) -> String {
             _ => None
         };
     
-    if img_result.is_some() {
+        if img_result.is_some() {
 
-        let orig_img = img_result.unwrap();
-        let mut threshold_boundary = 200;
+            let orig_img = img_result.unwrap();
+            let mut threshold_boundary = 200;
 
-        while threshold_boundary >= 120 {
+            while threshold_boundary >= 120 {
 
-            let bw_img = threshold(&orig_img, threshold_boundary);
-            let mut img = rqrr::PreparedImage::prepare(bw_img);
-            let grids = img.detect_grids();
-            
-            if grids.len() > 0 {
-                let result = grids[0].decode();
-                if result.is_err() {
-                    // println!("{}: {:?}", path, result);
+                let bw_img = threshold(&orig_img, threshold_boundary);
+                let mut img = rqrr::PreparedImage::prepare(bw_img);
+                let grids = img.detect_grids();
+                
+                if grids.len() > 0 {
+                    let result = grids[0].decode();
+                    if result.is_err() {
+                        // println!("{}: {:?}", path, result);
+                    }
+                    else {
+                        let (_meta, content) = result.unwrap();
+                        return content;
+                    }
                 }
-                else {
-                    let (_meta, content) = result.unwrap();
-                    return content;
-                }
-            }
 
-            threshold_boundary -= 40;
+                threshold_boundary -= 40;
             }
 
         }
