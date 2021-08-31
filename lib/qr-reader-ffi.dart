@@ -10,7 +10,18 @@ typedef ReadQRFunc = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8>);
 
 class QRReaderFFI {
 
-  static String read_qr_ffi(String path) {
+  ReadQRFunc _read_qr_ffi_func = null;
+
+  static QRReaderFFI _instance = null;
+
+  static QRReaderFFI get instance {
+    if (_instance == null) {
+      _instance = QRReaderFFI();
+    }
+    return _instance;
+  }
+
+  QRReaderFFI() {
     var libraryPath = '';
     if (Platform.isMacOS) {
       libraryPath = 'libqr_reader_ffi.dylib';
@@ -20,17 +31,16 @@ class QRReaderFFI {
       libraryPath = Path.join(currentPath, 'qr_reader_ffi.dll');
     }
 
-    if (libraryPath.length == 0) {
-      return '';
-    }
+    var libqr_reader_ffi = ffi.DynamicLibrary.open(libraryPath);
 
-    ffi.DynamicLibrary libqr_reader_ffi = ffi.DynamicLibrary.open(libraryPath);
-    ReadQRFunc read_qr_ffi_func = libqr_reader_ffi
+    _read_qr_ffi_func = libqr_reader_ffi
       .lookup<ffi.NativeFunction<ReadQRFunc>>('read_qr_ffi')
       .asFunction();
+  }
 
+  static String read_qr_ffi(String path) {
     var utf8_path = path.toNativeUtf8();
-    var qr_data = read_qr_ffi_func(utf8_path);
+    var qr_data = instance._read_qr_ffi_func(utf8_path);
     return qr_data.toDartString();
   }
 
