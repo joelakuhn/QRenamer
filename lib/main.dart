@@ -273,7 +273,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         child: Container (
           padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        child: Row(children: [ Icon(icon), Text("  " + text) ]),
+          child: Row(children: [ Icon(icon), Text("  " + text) ]),
         ),
         onPressed: condition() && !_isRunning ? onPressed : () {},
       );
@@ -345,11 +345,11 @@ class _MyHomePageState extends State<MyHomePage> {
       return Container(
         padding: IO.Platform.isWindows ? EdgeInsets.only(left: 8) : EdgeInsets.zero,
         child: TextButton(
-        onPressed: () => _insertFormatter(tag),
-        child: Container(
-          decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(6)), color: Colors.grey[350]),
-          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-          child: Text(name, style: TextStyle(fontSize: 12, color: Colors.grey[900])),
+          onPressed: () => _insertFormatter(tag),
+          child: Container(
+            decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(6)), color: Colors.grey[350]),
+            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+            child: Text(name, style: TextStyle(fontSize: 12, color: Colors.grey[900])),
           )
         )
       );
