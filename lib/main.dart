@@ -140,15 +140,26 @@ class _MyHomePageState extends State<MyHomePage> {
     return uiFiles;
   }
 
+  String _fixPath(String path) {
+    if (path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    path = path.replaceAll('/', r'\');
+    return path;
+  }
+
   void _handleFileDrop(List urls) {
     List<UIFile> uiFiles = [];
+    var paths = IO.Platform.isWindows
+      ? urls.map((url) => _fixPath(url.path))
+      : urls.map((url) => url.path);
     
-    for (var url in urls) {
-      if (IO.FileSystemEntity.isDirectorySync(url.path)) {
-        uiFiles.addAll(_readDir(url.path));
+    for (var path in paths) {
+      if (IO.FileSystemEntity.isDirectorySync(path)) {
+        uiFiles.addAll(_readDir(path));
       }
       else {
-        uiFiles.add(UIFile(url.path));
+        uiFiles.add(UIFile(path));
       }
     }
     _sortByFileNumber(uiFiles);
