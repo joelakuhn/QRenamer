@@ -1,10 +1,8 @@
 import 'dart:ffi' as ffi;
 import 'package:ffi/ffi.dart';
 import 'dart:isolate';
-import 'dart:io' show Platform, Directory;
+import 'dart:io' show Platform;
 import 'package:path/path.dart' as Path;
-
-import 'package:flutter/material.dart';
 
 typedef ReadQRFunc = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8>);
 
