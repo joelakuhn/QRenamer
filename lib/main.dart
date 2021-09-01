@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
     'dcr', 'pef', 'crw', 'iiq', '3fr', 'nrw', 'nef', 'mos', 'cr2', 'ari' ];
   bool _isRunning = false;
   bool _dryRun = false;
-  bool _prioritizeAccuracy = false;
+  bool _maximizeAccuracy = false;
   bool _isDropping = false;
   int _pctComplete = -1;
   QRReaderFFI qrReaderFfi = QRReaderFFI();
@@ -196,7 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     var lastQr = "";
     var complete = 0;
-    var max_size = _prioritizeAccuracy ? 0 : 1500;
+    var max_size = _maximizeAccuracy ? 0 : 1500;
     for (var file in _files) {
       if (!_isRunning) break;
       if (file.processed && !file.wasDryRun) {
@@ -434,11 +434,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextButton.styleFrom(primary: _isRunning ? Colors.grey[400] : Colors.grey[800]),
                 child: Row(
                   children: [
-                    Icon(_prioritizeAccuracy ? Icons.check_box_outlined : Icons.check_box_outline_blank),
-                    Text(" Prioritize Accuracy"),
+                    Icon(_maximizeAccuracy ? Icons.check_box_outlined : Icons.check_box_outline_blank),
+                    Text(" Maximize Accuracy"),
                   ]
                 ),
-                onPressed: () { if (!_isRunning) { setState(() { _prioritizeAccuracy = !_prioritizeAccuracy; }); } },
+                onPressed: () { if (!_isRunning) { setState(() { _maximizeAccuracy = !_maximizeAccuracy; }); } },
               ),
               TextButton(
                 style: TextButton.styleFrom(primary: _isRunning ? Colors.grey[400] : Colors.grey[800]),
