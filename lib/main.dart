@@ -79,6 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
     'dcr', 'pef', 'crw', 'iiq', '3fr', 'nrw', 'nef', 'mos', 'cr2', 'ari' ];
   bool _isRunning = false;
   bool _dryRun = false;
+  bool _prioritizeAccuracy = false;
   bool _isDropping = false;
   int _pctComplete = -1;
   QRReaderFFI qrReaderFfi = QRReaderFFI();
@@ -195,6 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     var lastQr = "";
     var complete = 0;
+    var max_size = _prioritizeAccuracy ? 0 : 1500;
     for (var file in _files) {
       if (!_isRunning) break;
       if (file.processed && !file.wasDryRun) {
@@ -202,7 +204,7 @@ class _MyHomePageState extends State<MyHomePage> {
         complete += 1;
         continue;
       }
-      final qr = (await qrReaderFfi.read_qr(file.path, 1500)).trim();
+      final qr = (await qrReaderFfi.read_qr(file.path, max_size)).trim();
       if (!_isRunning) break;
       if (qr.length > 0) {
         lastQr = qr;
@@ -432,11 +434,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextButton.styleFrom(primary: _isRunning ? Colors.grey[400] : Colors.grey[800]),
                 child: Row(
                   children: [
+                    Icon(_prioritizeAccuracy ? Icons.check_box_outlined : Icons.check_box_outline_blank),
+                    Text(" Prioritize Accuracy"),
+                  ]
+                ),
+                onPressed: () { if (!_isRunning) { setState(() { _prioritizeAccuracy = !_prioritizeAccuracy; }); } },
+              ),
+              TextButton(
+                style: TextButton.styleFrom(primary: _isRunning ? Colors.grey[400] : Colors.grey[800]),
+                child: Row(
+                  children: [
                     Icon(_dryRun ? Icons.check_box_outlined : Icons.check_box_outline_blank),
                     Text(" Dry Run"),
                   ]
                 ),
                 onPressed: () { if (!_isRunning) _toggleDryrun(); },
+              ),
+              Container(
+                width: 10
               ),
               TextButton(
                 style: TextButton.styleFrom(
