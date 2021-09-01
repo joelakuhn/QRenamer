@@ -6,7 +6,7 @@ fn main() {
 
     for i in 1..args.len() {
         let path = String::from(&args[i]);
-        let qr_data = read_qr(path);
+        let qr_data = read_qr(path, 1500);
         if qr_data.len() > 0 {
             println!("{}", qr_data);
         }

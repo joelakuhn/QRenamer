@@ -50,6 +50,10 @@ impl ColorMap for Threshold {
 }
 
 fn constrain_size(orig_w : u32, orig_h : u32, max_dim : u32) -> (u32, u32) {
+    if max_dim == 0 {
+        return (orig_w, orig_h);
+    }
+
     let mut w = orig_w;
     let mut h = orig_h;
 
@@ -108,10 +112,10 @@ fn get_average_pixel(data : &[u16], x : i32, y : i32, steps : i32, w : i32, h : 
     return (wide_pixel as f32 / pixels_found as f32) as u16;
 }
 
-fn open_raw(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
+fn open_raw(path : &String, max_size : u32) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
     let img = rawloader::decode_file(path).unwrap();
 
-    let (w, h) = constrain_size(img.width as u32, img.height as u32, 1500);
+    let (w, h) = constrain_size(img.width as u32, img.height as u32, max_size);
     let img_width = img.width;
     let img_height = img.height;
     let w_ratio = img_width as f32 / w as f32;
@@ -134,7 +138,7 @@ fn open_raw(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std::v
     return None;
 }
 
-fn open_image(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
+fn open_image(path : &String, max_size : u32) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
     let reader = Reader::open(path);
     if !reader.is_err() {
         let decoded_img = reader.unwrap().decode();
@@ -142,7 +146,8 @@ fn open_image(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std:
             let img = decoded_img.unwrap();
             let img_width = img.width();
             let img_height = img.height();
-            let (w, h) = constrain_size(img_width, img_height, 1500);
+            let (w, h) = constrain_size(img_width, img_height, max_size);
+            // let (w, h) = (img_width, img_height);
             let w_ratio = img_width as f32 / w as f32;
             let h_ratio = img_height as f32 / h as f32;
             
@@ -152,25 +157,25 @@ fn open_image(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std:
                 
                 img.get_pixel(neighbor_x, neighbor_y).to_luma()
             });
-            
+        
             return Some(luma_img);
         }
     }
     return None;
 }
 
-pub fn read_qr(path : String) -> String {
+pub fn read_qr(path : String, max_size : u32) -> String {
     let ext = Path::new(&path).extension();
 
     if ext.is_some() {
 
         let img_result = match String::from(ext.unwrap().to_str().unwrap()).to_lowercase().as_str() {
             "jpg" | "jpeg" | "png" | "bmp" | "gif" | "tga" | "tiff" | "webp"
-                => open_image(&path),
+                => open_image(&path, max_size),
             "mrw" | "arw" | "srf" | "sr2" | "mef" | "orf" | "srw" | "erf" |
             "kdc" | "dcs" | "rw2" | "raf" | "dcr" | "pef" | "crw" | "iiq" |
             "3fr" | "nrw" | "nef" | "mos" | "cr2" | "ari"
-                => open_raw(&path),
+                => open_raw(&path, max_size),
             _ => None
         };
     

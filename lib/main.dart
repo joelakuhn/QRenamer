@@ -202,7 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
         complete += 1;
         continue;
       }
-      final qr = (await qrReaderFfi.read_qr(file.path)).trim();
+      final qr = (await qrReaderFfi.read_qr(file.path, 1500)).trim();
       if (!_isRunning) break;
       if (qr.length > 0) {
         lastQr = qr;

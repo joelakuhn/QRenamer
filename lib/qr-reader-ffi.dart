@@ -4,7 +4,7 @@ import 'dart:isolate';
 import 'dart:io' show Platform;
 import 'package:path/path.dart' as Path;
 
-typedef ReadQRFunc = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8>);
+typedef ReadQRFunc = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8>, ffi.Pointer<Utf8>);
 
 class QRReaderFFI {
 
@@ -36,16 +36,17 @@ class QRReaderFFI {
       .asFunction();
   }
 
-  static String read_qr_ffi(String path) {
+  static String read_qr_ffi(String path, int max_size) {
     var utf8_path = path.toNativeUtf8();
-    var qr_data = instance._read_qr_ffi_func(utf8_path);
+    var utf8_max_size = max_size.toString().toNativeUtf8();
+    var qr_data = instance._read_qr_ffi_func(utf8_path, utf8_max_size);
     return qr_data.toDartString();
   }
 
-  Future<String> read_qr(String path) async {
+  Future<String> read_qr(String path, int max_size) async {
     var receive_port = new ReceivePort();
 
-    Isolate.spawn(read_qr_isolate, [ receive_port.sendPort, path ]);
+    Isolate.spawn(read_qr_isolate, [ receive_port.sendPort, path, max_size ]);
     var qr_data = await receive_port.first as String;
 
     return qr_data;
@@ -54,7 +55,8 @@ class QRReaderFFI {
   static void read_qr_isolate(List<dynamic> message) async {
     var send_port = message[0] as SendPort;
     var path = message[1] as String;
-    var qr_data = read_qr_ffi(path);
+    var max_size = message[2] as int;
+    var qr_data = read_qr_ffi(path, max_size);
     send_port.send(qr_data);
   }
 }
