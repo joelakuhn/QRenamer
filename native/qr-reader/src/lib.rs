@@ -6,8 +6,9 @@ use image::io::Reader;
 use std::path::Path;
 
 use rqrr;
-
 use rawloader;
+use mozjpeg;
+use rgb::alt::*;
 
 #[derive(Clone, Copy)]
 pub struct Threshold {
@@ -138,6 +139,37 @@ fn open_raw(path : &String, max_size : u32) -> Option<image::ImageBuffer<image::
     return None;
 }
 
+fn open_jpeg(path: &String, max_size : u32) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
+    let res = std::panic::catch_unwind(|| {
+        let d = mozjpeg::Decompress::with_markers(mozjpeg::ALL_MARKERS)
+            .from_path(path).unwrap();
+
+        let mut img = d.grayscale().unwrap();
+        let pixels : Vec<GRAY8> = img.read_scanlines().unwrap();
+
+        let img_width = img.width() as u32;
+        let img_height = img.height() as u32;
+        let (w, h) = constrain_size(img_width, img_height, max_size);
+        let w_ratio = img_width as f32 / w as f32;
+        let h_ratio = img_height as f32 / h as f32;
+        
+        let luma_img = image::ImageBuffer::from_fn(w, h, |x, y| {
+            let neighbor_x = clamp((x as f32 * w_ratio) as u32, 0, img_width);
+            let neighbor_y = clamp((y as f32 * h_ratio) as u32, 0, img_height);
+            
+            image::Luma([pixels[(neighbor_x + neighbor_y * img_width) as usize].0])
+        });
+
+        img.finish_decompress();
+        
+        luma_img
+    });
+    match res {
+        Ok(luma) => Some(luma),
+        _ => None
+    }
+}
+
 fn open_image(path : &String, max_size : u32) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
     let reader = Reader::open(path);
     if !reader.is_err() {
@@ -170,12 +202,17 @@ pub fn read_qr(path : String, max_size : u32) -> String {
     if ext.is_some() {
 
         let img_result = match String::from(ext.unwrap().to_str().unwrap()).to_lowercase().as_str() {
-            "jpg" | "jpeg" | "png" | "bmp" | "gif" | "tga" | "tiff" | "webp"
+            "jpg" | "jpeg"
+                => open_jpeg(&path, max_size),
+
+            "png" | "bmp" | "gif" | "tga" | "tiff" | "webp"
                 => open_image(&path, max_size),
+
             "mrw" | "arw" | "srf" | "sr2" | "mef" | "orf" | "srw" | "erf" |
             "kdc" | "dcs" | "rw2" | "raf" | "dcr" | "pef" | "crw" | "iiq" |
             "3fr" | "nrw" | "nef" | "mos" | "cr2" | "ari"
                 => open_raw(&path, max_size),
+
             _ => None
         };
     

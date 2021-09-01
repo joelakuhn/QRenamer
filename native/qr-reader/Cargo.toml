@@ -7,3 +7,5 @@ edition = "2018"
 rqrr = { git = "https://github.com/joelakuhn/rqrr" }
 image = "0.23.14"
 rawloader = "0.37.0"
+mozjpeg = "0.9.1"
+rgb = "0.8.27"
