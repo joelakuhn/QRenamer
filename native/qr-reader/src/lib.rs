@@ -139,6 +139,7 @@ fn open_raw(path : &String, max_size : u32) -> Option<image::ImageBuffer<image::
     return None;
 }
 
+#[cfg(target_os = "macos")]
 fn open_jpeg(path: &String, max_size : u32) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
     let res = std::panic::catch_unwind(|| {
         let decompressor = mozjpeg::Decompress::with_markers(mozjpeg::ALL_MARKERS)
@@ -202,8 +203,13 @@ pub fn read_qr(path : String, max_size : u32) -> String {
     if ext.is_some() {
 
         let img_result = match String::from(ext.unwrap().to_str().unwrap()).to_lowercase().as_str() {
+            #[cfg(target_os = "macos")]
             "jpg" | "jpeg"
                 => open_jpeg(&path, max_size),
+
+            #[cfg(target_os = "windows")]
+            "jpg" | "jpeg"
+                => open_image(&path, max_size),
 
             "png" | "bmp" | "gif" | "tga" | "tiff" | "webp"
                 => open_image(&path, max_size),
