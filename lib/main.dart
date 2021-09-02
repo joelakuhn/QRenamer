@@ -232,20 +232,22 @@ class _MyHomePageState extends State<MyHomePage> {
         lastQr = qr;
       }
       if (lastQr.length > 0) {
-        var ext = Path.extension(file.name);
-        var newName = format;
-        newName = newName.replaceAll("{qr}", "$lastQr");
-        newName = newName.replaceAll("{file-name}", Path.basenameWithoutExtension(file.name));
+        if (format.indexOf("{qr}") >= 0 && file.name.indexOf(lastQr) == -1) {
+          var ext = Path.extension(file.name);
+          var newName = format;
+          newName = newName.replaceAll("{qr}", "$lastQr");
+          newName = newName.replaceAll("{file-name}", Path.basenameWithoutExtension(file.name));
           newName = newName.replaceAll("{file-number}", file.fileNumber);
-        if (!newName.toLowerCase().endsWith(ext.toLowerCase())) {
-          newName += ext;
-        }
-        var newPath = Path.join(Path.dirname(file.path), newName);
-        file.newPath = newPath;
+          if (!newName.toLowerCase().endsWith(ext.toLowerCase())) {
+            newName += ext;
+          }
+          var newPath = Path.join(Path.dirname(file.path), newName);
+          file.newPath = newPath;
 
-        if (!_dryRun) {
-          var f = IO.File(file.path);
-          f.rename(newPath);
+          if (!_dryRun) {
+            var f = IO.File(file.path);
+            f.rename(newPath);
+          }
         }
       }
       file.processed = true;
