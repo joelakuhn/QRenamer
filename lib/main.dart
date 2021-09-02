@@ -153,19 +153,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return uiFiles;
   }
 
-  String _fixPath(String path) {
-    if (path.startsWith('/')) {
-      path = path.substring(1);
-    }
-    path = path.replaceAll('/', r'\');
-    return path;
-  }
-
   void _handleFileDrop(List urls) {
     List<UIFile> uiFiles = [];
-    var paths = IO.Platform.isWindows
-      ? urls.map((url) => _fixPath(url.path))
-      : urls.map((url) => url.path);
+    var paths = urls.map((url) => url.toFilePath());
     
     for (var path in paths) {
       if (IO.FileSystemEntity.isDirectorySync(path)) {
