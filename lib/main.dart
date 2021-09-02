@@ -42,6 +42,8 @@ class UIFile {
   String _name;
   String _newPath;
   String _newName;
+  String _fileNumber;
+  int _intFileNumber;
   String qr;
   bool wasDryRun = false;
   bool processed = false;
@@ -53,11 +55,18 @@ class UIFile {
     this.qr = "";
   }
 
+  String _extractFileNumber(String path) {
+    var fileNumberMatches = RegExp(r'\d+').allMatches(Path.basenameWithoutExtension(path));
+    return fileNumberMatches.length > 0 ? fileNumberMatches.last.group(0) : "";
+  }
+
   String get name { return _name; }
   String get path { return _path; }
   set path(path) {
     _path = path;
     _name = Path.basename(path);
+    _fileNumber = _extractFileNumber(path);
+    _intFileNumber = _fileNumber == "" ? 0 : int.parse(_fileNumber);
   }
 
   String get newName { return _newName; }
@@ -66,6 +75,10 @@ class UIFile {
     _newPath = path;
     _newName = Path.basename(path);
   }
+
+  String get fileNumber { return _fileNumber; }
+
+  int get intFileNumber { return _intFileNumber; }
 }
 
 class UIColors {
@@ -113,7 +126,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _sortByFileNumber(List<UIFile> files) {
-    files.sort((a,b) => Path.basename(a.path).compareTo(Path.basename(b.path)));
+    files.sort((a, b) {
+      if (a.intFileNumber == b.intFileNumber) {
+        return a.name.compareTo(b.name);
+      }
+      else {
+        return a.intFileNumber - b.intFileNumber;
+      }
+    });
   }
 
   void _browseFiles() async {
@@ -213,12 +233,10 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       if (lastQr.length > 0) {
         var ext = Path.extension(file.name);
-        var fileNumberMatches = RegExp(r'\d+').allMatches(Path.basenameWithoutExtension(file.name));
-        var fileNumber = fileNumberMatches.length > 0 ? fileNumberMatches.last.group(0) : "";
         var newName = format;
         newName = newName.replaceAll("{qr}", "$lastQr");
         newName = newName.replaceAll("{file-name}", Path.basenameWithoutExtension(file.name));
-        newName = newName.replaceAll("{file-number}", fileNumber);
+          newName = newName.replaceAll("{file-number}", file.fileNumber);
         if (!newName.toLowerCase().endsWith(ext.toLowerCase())) {
           newName += ext;
         }
