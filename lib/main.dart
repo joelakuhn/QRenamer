@@ -432,42 +432,46 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget fileTable() {
-    return
-    Expanded(
-      child: Container(
-        color: UIColors.gray2,
-        child: Scrollbar(
-          child: SingleChildScrollView(
-            child: Table(
-              columnWidths: {
-                0: FixedColumnWidth(36),
-              },
-              border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
-              children: _files.map((f) => TableRow(
-                children: [
-                  TableCell(child: Container(
-                    width: 20,
-                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    alignment: Alignment.centerLeft,
-                    child: Icon(
-                      Icons.check_circle,
-                      color: f.processed && !f.wasDryRun ? UIColors.green2 : UIColors.gray3,
-                    ),
-                  )),
-                  TableCell(child: Container(
-                    padding: EdgeInsets.all(12),
-                    alignment: Alignment.centerLeft,
-                    child: Text(Path.basename(f.path), style: TextStyle(color: UIColors.text))
-                  )),
-                  TableCell(child: Container(
-                    padding: EdgeInsets.all(12),
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      Path.basename(f.newPath.length > 0 ? f.newPath : "unchanged"),
-                      style: TextStyle(color: f.newPath.length > 0 ? UIColors.text : UIColors.disabled))
-                  ))
-                ]
-              )).toList(),
+    return DropTarget(
+      onDragEntered: () { if (!_isRunning) setState(() => _isDropping = true); },
+      onDragExited: () { if (!_isRunning) setState(() => _isDropping = false); },
+      onDragDone: (urls) { if (!_isRunning) _handleFileDrop(urls); },
+      child: Expanded(
+        child: Container(
+          color: _isDropping ? UIColors.green1 : UIColors.gray2,
+          child: Scrollbar(
+            child: SingleChildScrollView(
+              child: Table(
+                columnWidths: {
+                  0: FixedColumnWidth(36),
+                },
+                border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
+                children: _files.map((f) => TableRow(
+                  children: [
+                    TableCell(child: Container(
+                      width: 20,
+                      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      alignment: Alignment.centerLeft,
+                      child: Icon(
+                        Icons.check_circle,
+                        color: f.processed && !f.wasDryRun ? UIColors.green2 : UIColors.gray3,
+                      ),
+                    )),
+                    TableCell(child: Container(
+                      padding: EdgeInsets.all(12),
+                      alignment: Alignment.centerLeft,
+                      child: Text(Path.basename(f.path), style: TextStyle(color: UIColors.text))
+                    )),
+                    TableCell(child: Container(
+                      padding: EdgeInsets.all(12),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        Path.basename(f.newPath.length > 0 ? f.newPath : "unchanged"),
+                        style: TextStyle(color: f.newPath.length > 0 ? UIColors.text : UIColors.disabled))
+                    ))
+                  ]
+                )).toList(),
+              )
             )
           )
         )
