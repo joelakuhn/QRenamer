@@ -223,7 +223,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       if (lastQr.length > 0) {
         var ext = Path.extension(file.name);
-        var fileNumberMatches = RegExp(r'\d+').allMatches(file.name);
+        var fileNumberMatches = RegExp(r'\d+').allMatches(Path.basenameWithoutExtension(file.name));
         var fileNumber = fileNumberMatches.length > 0 ? fileNumberMatches.last.group(0) : "";
         var newName = format;
         newName = newName.replaceAll("{qr}", "$lastQr");
