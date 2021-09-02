@@ -7,7 +7,10 @@ use std::path::Path;
 
 use rqrr;
 use rawloader;
+
+#[cfg(target_os = "macos")]
 use mozjpeg;
+#[cfg(target_os = "macos")]
 use rgb::alt::*;
 
 #[derive(Clone, Copy)]
