@@ -285,7 +285,7 @@ class _MyHomePageState extends State<MyHomePage> {
         style: TextButton.styleFrom(
           shape: RoundedRectangleBorder(side: BorderSide.none),
           primary: !_isRunning && condition() ? UIColors.text : UIColors.disabled,
-          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
           backgroundColor: UIColors.gray3,
         ),
         child: Container (
@@ -437,7 +437,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   TableCell(child: Container(
                     width: 20,
-                    padding: EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 12),
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     alignment: Alignment.centerLeft,
                     child: Icon(
                       Icons.check_circle,
@@ -445,12 +445,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   )),
                   TableCell(child: Container(
-                    padding: EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 12),
+                    padding: EdgeInsets.all(12),
                     alignment: Alignment.centerLeft,
                     child: Text(Path.basename(f.path), style: TextStyle(color: UIColors.text))
                   )),
                   TableCell(child: Container(
-                    padding: EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 12),
+                    padding: EdgeInsets.all(12),
                     alignment: Alignment.centerLeft,
                     child: Text(
                       Path.basename(f.newPath.length > 0 ? f.newPath : "unchanged"),
