@@ -68,6 +68,18 @@ class UIFile {
   }
 }
 
+class UIColors {
+  static Color gray1 = Color(0xff0f1113);
+  static Color gray2 = Color(0xff191b1f);
+  static Color gray3 = Color(0xff2b2f35);
+  static Color gray4 = Color(0xff3c4047);
+  static Color text = Color(0xffaebcce);
+  static Color disabled = Color(0xff474c53);
+  static Color icon = Color(0xff6f7a8a);
+  static Color green1 = Color(0xff437d6c);
+  static Color green2 = Color(0xff00b27d);
+}
+
 class _MyHomePageState extends State<MyHomePage> {
 
   // LOCALS
@@ -266,52 +278,43 @@ class _MyHomePageState extends State<MyHomePage> {
     _formatController.text = "$text$formatter";
   }
 
-  Widget topBar() {
-    TextButton barButton({String text, IconData icon, Function condition, Function onPressed}) {
-      return TextButton(
+    Widget barButton({String text, IconData icon, Function condition, Function onPressed}) {
+    return Container(
+      padding: EdgeInsets.only(right: 2),
+      child: TextButton(
         style: TextButton.styleFrom(
-          primary: !_isRunning && condition() ? Colors.grey[800] : Colors.grey[500],
-          backgroundColor: Colors.grey[200],
+          shape: RoundedRectangleBorder(side: BorderSide.none),
+          primary: !_isRunning && condition() ? UIColors.text : UIColors.disabled,
+          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          backgroundColor: UIColors.gray3,
         ),
         child: Container (
           padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           child: Row(children: [ Icon(icon), Text("  " + text) ]),
         ),
         onPressed: condition() && !_isRunning ? onPressed : () {},
-      );
-    }
+      )
+    );
+  }
+
+  Widget topBar() {
+
 
     return Container(
-      color: Colors.grey[300],
+      color: UIColors.gray2,
       child: Row(
         children: [
-          ButtonBar(
-            children:[
-              barButton(
-                text: "Open Files",
-                icon: Icons.image,
-                condition: () => true,
-                onPressed: _browseFiles
-              ),
-              barButton(
-                text: "Open Folder",
-                icon: Icons.folder,
-                condition: () => true,
-                onPressed: _browseDirectory
-              ),
-              barButton(
-                text: "Close Files",
-                icon: Icons.close,
-                condition: () => _files.length > 0,
-                onPressed: _closeFiles,
-              ),
-              barButton(
-                text: "Undo",
-                icon: Icons.undo,
-                condition: () => _files.any((f) => f.processed),
-                onPressed: _undo,
-              )
-            ]
+          barButton(
+            text: "Close Files",
+            icon: Icons.close,
+            condition: () => _files.length > 0,
+            onPressed: _closeFiles,
+          ),
+          barButton(
+            text: "Undo",
+            icon: Icons.undo,
+            condition: () => _files.any((f) => f.processed),
+            onPressed: _undo,
           )
         ]
       )
@@ -320,19 +323,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget formatBar() {
     return Container(
-      color: Colors.grey[200],
+      color: UIColors.gray4,
       padding: EdgeInsets.only(top: 12, bottom: 8, left: 8, right: 8),
       height: 50,
       child: Row(
         children: [
-          Text("Rename Format:   "),
+          Container(
+            padding: EdgeInsets.only(left: 4),
+            child: Text("Rename to:  ", style: TextStyle(color: UIColors.text)),
+          ),
           Expanded(
             child: TextField(
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(fontSize: 14, color: UIColors.text),
               controller: _formatController,
               decoration: InputDecoration(
-                contentPadding: EdgeInsets.all(4),
-                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                border: OutlineInputBorder()
               ),
             )
           )
@@ -349,16 +355,16 @@ class _MyHomePageState extends State<MyHomePage> {
         child: TextButton(
           onPressed: () => _insertFormatter(tag),
           child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(6)), color: Colors.grey[350]),
-            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-            child: Text(name, style: TextStyle(fontSize: 12, color: Colors.grey[900])),
+            decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(6)), color: UIColors.gray3),
+            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            child: Text(name, style: TextStyle(fontSize: 12, color: UIColors.text)),
           )
         )
       );
     }
 
     return Container(
-      color: Colors.grey[200],
+      color: UIColors.gray4,
       padding: EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
@@ -370,49 +376,89 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget fileTable() {
-    return
-    DropTarget(
+  Widget openFilesBox() {
+    return DropTarget(
       onDragEntered: () { if (!_isRunning) setState(() => _isDropping = true); },
       onDragExited: () { if (!_isRunning) setState(() => _isDropping = false); },
       onDragDone: (urls) { if (!_isRunning) _handleFileDrop(urls); },
       child: Expanded(
         child: Container(
-          height: 100,
-          color: _isDropping ? Colors.blue[100] : Colors.white,
-          child: Scrollbar(
-            child: SingleChildScrollView(
-              child: Table(
-                columnWidths: {
-                  0: FixedColumnWidth(36),
-                },
-                border: TableBorder(horizontalInside: BorderSide(width: 1, color: Colors.grey[400])),
-                children: _files.map((f) => TableRow(
+          color: _isDropping ? UIColors.green1 : UIColors.gray2,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.only(bottom: 20),
+                  child: Text("Drop Files Here", style: TextStyle(fontSize: 24, color: UIColors.text))
+                ),
+                Container(
+                  padding: EdgeInsets.only(bottom: 26),
+                  child: Text("or", style: TextStyle(fontSize: 14, color: UIColors.text))
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    TableCell(child: Container(
-                      width: 20,
-                      padding: EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 12),
-                      alignment: Alignment.centerLeft,
-                      child: Icon(
-                        Icons.check_circle,
-                        color: f.processed && !f.wasDryRun ? Colors.green[400] : Colors.grey[300],
-                      ),
-                    )),
-                    TableCell(child: Container(
-                      padding: EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 12),
-                      alignment: Alignment.centerLeft,
-                      child: Text(Path.basename(f.path), style: TextStyle(color: Colors.grey[900]))
-                    )),
-                    TableCell(child: Container(
-                      padding: EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 12),
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        Path.basename(f.newPath.length > 0 ? f.newPath : "unchanged"),
-                        style: TextStyle(color: f.newPath.length > 0 ? Colors.grey[900] : Colors.grey[500]))
-                    ))
+                  barButton(
+                      text: "Open Files",
+                      icon: Icons.image,
+                      condition: () => true,
+                      onPressed: _browseFiles
+                    ),
+                    barButton(
+                      text: "Open Folder",
+                      icon: Icons.folder,
+                      condition: () => true,
+                      onPressed: _browseDirectory
+                    ),
                   ]
-                )).toList(),
-              )
+                )
+              ],
+            )
+          )
+        )
+      )
+    );
+  }
+
+  Widget fileTable() {
+    return
+    Expanded(
+      child: Container(
+        height: 100,
+        color: UIColors.gray2,
+        child: Scrollbar(
+          child: SingleChildScrollView(
+            child: Table(
+              columnWidths: {
+                0: FixedColumnWidth(36),
+              },
+              border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
+              children: _files.map((f) => TableRow(
+                children: [
+                  TableCell(child: Container(
+                    width: 20,
+                    padding: EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 12),
+                    alignment: Alignment.centerLeft,
+                    child: Icon(
+                      Icons.check_circle,
+                      color: f.processed && !f.wasDryRun ? UIColors.green2 : UIColors.gray3,
+                    ),
+                  )),
+                  TableCell(child: Container(
+                    padding: EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 12),
+                    alignment: Alignment.centerLeft,
+                    child: Text(Path.basename(f.path), style: TextStyle(color: UIColors.text))
+                  )),
+                  TableCell(child: Container(
+                    padding: EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 12),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      Path.basename(f.newPath.length > 0 ? f.newPath : "unchanged"),
+                      style: TextStyle(color: f.newPath.length > 0 ? UIColors.text : UIColors.disabled))
+                  ))
+                ]
+              )).toList(),
             )
           )
         )
@@ -422,16 +468,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget bottomBar() {
     return Container(
-      color: Colors.grey[300],
+      color: UIColors.gray1,
       child: Row(
         children: [
-          Container(padding: EdgeInsets.all(12), child: Text( _pctComplete < 0 ? "" : "$_pctComplete%")),
+          Container(padding: EdgeInsets.all(12), child: Text( _pctComplete < 0 ? "" : "$_pctComplete%", style: TextStyle(color: UIColors.text))),
           Spacer(),
           ButtonBar(
             layoutBehavior: ButtonBarLayoutBehavior.padded,
             children: [
               TextButton(
-                style: TextButton.styleFrom(primary: _isRunning ? Colors.grey[400] : Colors.grey[800]),
+                style: TextButton.styleFrom(primary: _isRunning ? UIColors.disabled : UIColors.text),
                 child: Row(
                   children: [
                     Icon(_maximizeAccuracy ? Icons.check_box_outlined : Icons.check_box_outline_blank),
@@ -441,7 +487,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () { if (!_isRunning) { setState(() { _maximizeAccuracy = !_maximizeAccuracy; }); } },
               ),
               TextButton(
-                style: TextButton.styleFrom(primary: _isRunning ? Colors.grey[400] : Colors.grey[800]),
+                style: TextButton.styleFrom(primary: _isRunning ?  UIColors.disabled : UIColors.text),
                 child: Row(
                   children: [
                     Icon(_dryRun ? Icons.check_box_outlined : Icons.check_box_outline_blank),
@@ -455,8 +501,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               TextButton(
                 style: TextButton.styleFrom(
-                  primary: Colors.grey[800],
-                  backgroundColor: Colors.grey[200],
+                  primary: UIColors.text,
+                  backgroundColor: UIColors.gray3,
                 ),
                 child: Container(
                   width: 70,
@@ -486,7 +532,7 @@ class _MyHomePageState extends State<MyHomePage> {
           topBar(),
           formatBar(),
           formatGenerators(),
-          fileTable(),
+          _files.length > 0 ? fileTable() : openFilesBox(),
           bottomBar(),
         ]
       ),
