@@ -141,11 +141,11 @@ fn open_raw(path : &String, max_size : u32) -> Option<image::ImageBuffer<image::
 
 fn open_jpeg(path: &String, max_size : u32) -> Option<image::ImageBuffer<image::Luma<u8>, std::vec::Vec<u8>>> {
     let res = std::panic::catch_unwind(|| {
-        let d = mozjpeg::Decompress::with_markers(mozjpeg::ALL_MARKERS)
-            .from_path(path).unwrap();
+        let decompressor = mozjpeg::Decompress::with_markers(mozjpeg::ALL_MARKERS)
+            .from_path(path).ok()?;
 
-        let mut img = d.grayscale().unwrap();
-        let pixels : Vec<GRAY8> = img.read_scanlines().unwrap();
+        let mut img = decompressor.grayscale().ok()?;
+        let pixels : Vec<GRAY8> = img.read_scanlines()?;
 
         let img_width = img.width() as u32;
         let img_height = img.height() as u32;
@@ -162,10 +162,10 @@ fn open_jpeg(path: &String, max_size : u32) -> Option<image::ImageBuffer<image::
 
         img.finish_decompress();
         
-        luma_img
+        Some(luma_img)
     });
     match res {
-        Ok(luma) => Some(luma),
+        Ok(luma) => luma,
         _ => None
     }
 }
