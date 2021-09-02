@@ -425,7 +425,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return
     Expanded(
       child: Container(
-        height: 100,
         color: UIColors.gray2,
         child: Scrollbar(
           child: SingleChildScrollView(
