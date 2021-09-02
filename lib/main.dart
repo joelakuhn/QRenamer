@@ -3,8 +3,8 @@ import 'package:flutter/widgets.dart';
 
 import 'package:path/path.dart' as Path;
 import 'dart:io' as IO;
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 
