@@ -51,7 +51,7 @@ class Renamer {
         _maybeRename();
       })
       .whenComplete(() {
-        file.processed = true;
+        file.decoded = true;
         file.wasDryRun = _state.dryRun;
         _handleFileComplete();
       });
@@ -70,7 +70,8 @@ class Renamer {
 
     // skip leading images without QR
     if (start == 0) {
-      while (start < _state.files.length && _state.files[start].processed && _state.files[start].qr.length == 0) {
+      while (start < _state.files.length && _state.files[start].decoded && _state.files[start].qr.length == 0) {
+        _state.files[start].decoded = true;
         start++;
       }
     }
@@ -78,13 +79,14 @@ class Renamer {
     if (start >= _state.files.length || _state.files[start].qr.length == 0) return;
 
     var end = start + 1;
-    while (end < _state.files.length && _state.files[end].processed && _state.files[end].qr.length == 0) {
+    while (end < _state.files.length && _state.files[end].decoded && _state.files[end].qr.length == 0) {
       end++;
     }
 
     if (end < _state.files.length && _state.files[end].qr.length == 0) return;
 
     for (var i = start; i < end; i++) {
+      _state.files[i].processed = true;
       _renameFile(_state.files[i], _state.files[start].qr);
     }
 

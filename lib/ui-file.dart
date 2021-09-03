@@ -9,6 +9,7 @@ class UIFile {
   int _intFileNumber;
   String qr;
   bool wasDryRun = false;
+  bool decoded = false;
   bool processed = false;
 
   UIFile(String path) {

@@ -30,6 +30,7 @@ class UIColors {
   static Color icon = Color(0xff6f7a8a);
   static Color green1 = Color(0xff437d6c);
   static Color green2 = Color(0xff00b27d);
+  static Color blue = Color(0xff1fb4c4);
 }
 
 class PageState extends State<QRenamerPage> {
@@ -172,6 +173,7 @@ class PageState extends State<QRenamerPage> {
       }
       file.newPath = "";
       file.processed = false;
+      file.decoded = false;
     }
     setState(() {
       files = files;
@@ -218,7 +220,7 @@ class PageState extends State<QRenamerPage> {
           barButton(
             text: "Undo",
             icon: Icons.undo,
-            condition: () => files.any((f) => f.processed),
+            condition: () => files.any((f) => f.processed || f.decoded),
             onPressed: _undo,
           )
         ]
@@ -349,7 +351,7 @@ class PageState extends State<QRenamerPage> {
                       alignment: Alignment.centerLeft,
                       child: Icon(
                         Icons.check_circle,
-                        color: f.processed && !f.wasDryRun ? UIColors.green2 : UIColors.gray3,
+                        color: f.processed && !f.wasDryRun ? UIColors.green2 : f.decoded && !f.wasDryRun ? UIColors.blue : UIColors.gray3,
                       ),
                     )),
                     TableCell(child: Container(
