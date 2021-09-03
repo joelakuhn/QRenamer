@@ -51,8 +51,10 @@ class Renamer {
         _maybeRename();
       })
       .whenComplete(() {
+        if (!_state.isRunning) return;
         file.decoded = true;
         file.wasDryRun = _state.dryRun;
+        _state.outsideSetState();
         _handleFileComplete();
       });
     }
