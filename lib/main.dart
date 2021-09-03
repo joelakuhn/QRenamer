@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import 'package:path/path.dart' as Path;
 import 'dart:io' as IO;
+import 'dart:math' as Math;
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:desktop_drop/desktop_drop.dart';
@@ -114,6 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
   _MyHomePageState() {
 
     _formatController.text = "{qr} {file-name}";
+    _concurrencyLevel = Math.max(1, (IO.Platform.numberOfProcessors / 2).floor());
 
     SharedPreferences.getInstance()
     .then((value) async {
@@ -212,56 +214,124 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  String _format = "";
+  int _concurrencyLevel = 1;
+  int _renameIndex = 0;
+  int _maxSize = 0;
+  int _complete = 0;
+  int _lastUpdated = 0;
+
   void _rename() async {
-    var format = _formatController.text;
-    _prefs.setString("format", format);
+    _format = _formatController.text;
+    _renameIndex = 0;
+    _maxSize = _maximizeAccuracy ? 0 : 1500;
+    _complete = 0;
+    _lastUpdated = 0;
 
-    var lastQr = "";
-    var complete = 0;
-    var max_size = _maximizeAccuracy ? 0 : 1500;
-    for (var file in _files) {
-      if (!_isRunning) break;
-      if (file.processed && !file.wasDryRun) {
-        lastQr = file.qr;
-        complete += 1;
-        continue;
-      }
-      final qr = (await qrReaderFfi.read_qr(file.path, max_size)).trim();
-      if (!_isRunning) break;
-      if (qr.length > 0) {
-        lastQr = qr;
-      }
-      if (lastQr.length > 0) {
-        if (format.indexOf("{qr}") >= 0 && file.name.indexOf(lastQr) == -1) {
-          var ext = Path.extension(file.name);
-          var newName = format;
-          newName = newName.replaceAll("{qr}", "$lastQr");
-          newName = newName.replaceAll("{file-name}", Path.basenameWithoutExtension(file.name));
-          newName = newName.replaceAll("{file-number}", file.fileNumber);
-          if (!newName.toLowerCase().endsWith(ext.toLowerCase())) {
-            newName += ext;
-          }
-          var newPath = Path.join(Path.dirname(file.path), newName);
-          file.newPath = newPath;
+    _prefs.setString("format", _format);
+    for (var _ = 0; _ < _concurrencyLevel; _++) {
+      _renameOne();
+    }
+  }
 
-          if (!_dryRun) {
-            var f = IO.File(file.path);
-            f.rename(newPath);
-          }
-        }
-      }
-      file.processed = true;
-      file.wasDryRun = _dryRun;
-      file.qr = lastQr;
-      complete += 1;
-      setState(() {
-        _files = _files;
-        _pctComplete = (complete / _files.length * 100).round();
+  void _renameOne() async {
+    if (!_isRunning) return;
+    if (_renameIndex >= _files.length) return;
+
+    var file = _files[_renameIndex++];
+  
+    if (file.processed && !file.wasDryRun) {
+      _handleFileComplete();
+    }
+    else {
+      qrReaderFfi.read_qr(file.path, _maxSize)
+      .then((qr) {
+        if (!_isRunning) return;
+        if (qr.length > 0) file.qr = qr;
+
+        _maybeRename();
+      })
+      .whenComplete(() {
+        file.processed = true;
+        file.wasDryRun = _dryRun;
+        _handleFileComplete();
       });
     }
+  }
+
+  void _handleFileComplete() {
+    _incrementComplete();
+    _maybeRename();
+    _maybeStopRunning();
+    _renameOne();
+  }
+
+  void _maybeRename() {
+    var start = _lastUpdated;
+
+    // skip leading images without QR
+    if (start == 0) {
+      while (start < _files.length && _files[start].processed && _files[start].qr.length == 0) {
+        start++;
+      }
+    }
+
+    if (start >= _files.length || _files[start].qr.length == 0) return;
+
+    var end = start + 1;
+    while (end < _files.length && _files[end].processed && _files[end].qr.length == 0) {
+      end++;
+    }
+
+    if (end < _files.length && _files[end].qr.length == 0) return;
+
+    for (var i = start; i < end; i++) {
+      _renameFile(_files[i], _files[start].qr);
+    }
+
+    _lastUpdated = end;
+
+    setState(() { _files = _files; });
+  }
+
+  void _renameFile(file, qr) {
+    if (_format.indexOf("{qr}") < 0 && file.name.indexOf(qr) >= 0) return;
+
+    var ext = Path.extension(file.name);
+    var newName = _format;
+    newName = newName.replaceAll("{qr}", qr);
+    newName = newName.replaceAll("{file-name}", Path.basenameWithoutExtension(file.name));
+    newName = newName.replaceAll("{file-number}", file.fileNumber);
+    if (!newName.toLowerCase().endsWith(ext.toLowerCase())) {
+      newName += ext;
+    }
+    var newPath = Path.join(Path.dirname(file.path), newName);
+    file.newPath = newPath;
+
+    if (!_dryRun) {
+      var f = IO.File(file.path);
+      f.rename(newPath);
+    }
+  }
+
+  void _incrementComplete() {
     setState(() {
-      _isRunning = false;
+      _pctComplete = (++_complete / _files.length * 100).round();
     });
+  }
+
+  void _maybeStopRunning() {
+    if (_complete >= _files.length) {
+      _stopRunning();
+    }
+  }
+
+  void _stopRunning() {
+    if (_isRunning) {
+      setState(() {
+        _isRunning = false;
+      });
+    }
   }
 
   void _undo() {
