@@ -18,7 +18,7 @@ class Renamer {
 
   Renamer(PageState state) {
     _state = state;
-    _concurrencyLevel = Math.max(1, (IO.Platform.numberOfProcessors / 2).floor());
+    _concurrencyLevel = Math.max(1, (IO.Platform.numberOfProcessors / 4).floor());
   }
 
   void start(format, maximizeAccuracy) async {
