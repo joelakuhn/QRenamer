@@ -222,9 +222,16 @@ pub fn read_qr(path : String, max_size : u32) -> String {
             let codes = decoder.identify(orig_img.width() as usize, orig_img.height() as usize, &orig_img);
 
             for code in codes {
-                let code = code.expect("failed to extract qr code");
-                let decoded = code.decode().expect("failed to decode qr code");
-                return std::str::from_utf8(&decoded.payload).unwrap().into();
+                match code {
+                    Ok(code) => match code.decode() {
+                        Ok(decoded) => match String::from_utf8(decoded.payload) {
+                            Ok(content) => { return content; }
+                            _ => {}
+                        }
+                        _ => {}
+                    }
+                    _ => {}
+                }
             }
         }
     }
