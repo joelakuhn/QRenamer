@@ -1,11 +1,10 @@
-use image;
-use image::{Luma, ImageBuffer, GenericImageView, Pixel};
-use image::imageops::colorops::{index_colors, ColorMap};
+use image::{self};
+use image::{Luma, GenericImageView, Pixel};
+use image::imageops::colorops::ColorMap;
 use image::io::Reader;
 
 use std::path::Path;
 
-use rqrr;
 use rawloader;
 
 #[cfg(target_os = "macos")]
@@ -73,16 +72,6 @@ fn constrain_size(orig_w : u32, orig_h : u32, max_dim : u32) -> (u32, u32) {
     }
 
     return (w, h);
-}
-
-fn threshold(img : &ImageBuffer<Luma<u8>, Vec<u8>>, boundary : u8) -> ImageBuffer<Luma<u8>, Vec<u8>> {
-    let cmap = Threshold{ boundary: boundary };
-    let palletized = index_colors(&img, &cmap);
-    let bw_img = ImageBuffer::from_fn(img.width(), img.height(), |x, y| {
-        let p = palletized.get_pixel(x, y);
-        cmap.lookup(p.0[0] as usize).expect("index color out of range")
-    });
-    return bw_img;
 }
 
 #[inline]
@@ -156,16 +145,16 @@ fn open_jpeg(path: &String, max_size : u32) -> Option<image::ImageBuffer<image::
         let (w, h) = constrain_size(img_width, img_height, max_size);
         let w_ratio = img_width as f32 / w as f32;
         let h_ratio = img_height as f32 / h as f32;
-        
+
         let luma_img = image::ImageBuffer::from_fn(w, h, |x, y| {
             let neighbor_x = clamp((x as f32 * w_ratio) as u32, 0, img_width);
             let neighbor_y = clamp((y as f32 * h_ratio) as u32, 0, img_height);
-            
+
             image::Luma([pixels[(neighbor_x + neighbor_y * img_width) as usize].0])
         });
 
         img.finish_decompress();
-        
+
         Some(luma_img)
     });
     match res {
@@ -186,14 +175,14 @@ fn open_image(path : &String, max_size : u32) -> Option<image::ImageBuffer<image
             // let (w, h) = (img_width, img_height);
             let w_ratio = img_width as f32 / w as f32;
             let h_ratio = img_height as f32 / h as f32;
-            
+
             let luma_img = image::ImageBuffer::from_fn(w, h, |x, y| {
                 let neighbor_x = clamp((x as f32 * w_ratio) as u32, 0, img_width);
                 let neighbor_y = clamp((y as f32 * h_ratio) as u32, 0, img_height);
-                
+
                 img.get_pixel(neighbor_x, neighbor_y).to_luma()
             });
-        
+
             return Some(luma_img);
         }
     }
@@ -224,32 +213,19 @@ pub fn read_qr(path : String, max_size : u32) -> String {
 
             _ => None
         };
-    
+
         if img_result.is_some() {
 
             let orig_img = img_result.unwrap();
-            let mut threshold_boundary = 200;
 
-            while threshold_boundary >= 120 {
+            let mut decoder = quircs::Quirc::default();
+            let codes = decoder.identify(orig_img.width() as usize, orig_img.height() as usize, &orig_img);
 
-                let bw_img = threshold(&orig_img, threshold_boundary);
-                let mut img = rqrr::PreparedImage::prepare(bw_img);
-                let grids = img.detect_grids();
-                
-                if grids.len() > 0 {
-                    let result = grids[0].decode();
-                    if result.is_err() {
-                        // println!("{}: {:?}", path, result);
-                    }
-                    else {
-                        let (_meta, content) = result.unwrap();
-                        return content;
-                    }
-                }
-
-                threshold_boundary -= 40;
+            for code in codes {
+                let code = code.expect("failed to extract qr code");
+                let decoded = code.decode().expect("failed to decode qr code");
+                return std::str::from_utf8(&decoded.payload).unwrap().into();
             }
-
         }
     }
     return String::from("");

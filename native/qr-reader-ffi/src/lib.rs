@@ -27,6 +27,6 @@ pub extern "C" fn free_str_ffi(ptr: *mut c_char) {
         if ptr.is_null() {
             return;
         }
-        CString::from_raw(ptr);
+        let _dropme = CString::from_raw(ptr);
     }
 }
