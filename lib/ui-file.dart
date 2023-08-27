@@ -1,16 +1,18 @@
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as Path;
 
 class UIFile {
-  String _path;
-  String _name;
-  String _newPath;
-  String _newName;
-  String _fileNumber;
-  int _intFileNumber;
-  String qr;
+  late String _path;
+  late String _name;
+  late String _newPath;
+  late String _newName;
+  late String _fileNumber;
+  late int _intFileNumber;
+  late String _qr;
   bool wasDryRun = false;
   bool decoded = false;
   bool processed = false;
+  TextEditingController controller = TextEditingController();
 
   UIFile(String path) {
     this.path = path;
@@ -21,7 +23,13 @@ class UIFile {
 
   String _extractFileNumber(String path) {
     var fileNumberMatches = RegExp(r'\d+').allMatches(Path.basenameWithoutExtension(path));
-    return fileNumberMatches.length > 0 ? fileNumberMatches.last.group(0) : "";
+    return fileNumberMatches.length > 0 ? fileNumberMatches.last.group(0).toString() : "";
+  }
+
+  String get qr { return _qr; }
+  set qr(value) {
+    _qr = value;
+    controller.text = value;
   }
 
   String get name { return _name; }

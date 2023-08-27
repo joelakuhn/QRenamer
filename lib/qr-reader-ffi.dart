@@ -8,15 +8,15 @@ typedef ReadQRFunc = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8>, ffi.Pointer<U
 
 class QRReaderFFI {
 
-  ReadQRFunc _read_qr_ffi_func = null;
+  ReadQRFunc? _read_qr_ffi_func = null;
 
-  static QRReaderFFI _instance = null;
+  static QRReaderFFI? _instance = null;
 
   static QRReaderFFI get instance {
     if (_instance == null) {
       _instance = QRReaderFFI();
     }
-    return _instance;
+    return _instance!;
   }
 
   QRReaderFFI() {
@@ -29,34 +29,34 @@ class QRReaderFFI {
       libraryPath = Path.join(currentPath, 'qr_reader_ffi.dll');
     }
 
-    var libqr_reader_ffi = ffi.DynamicLibrary.open(libraryPath);
+    var libqrReaderFfi = ffi.DynamicLibrary.open(libraryPath);
 
-    _read_qr_ffi_func = libqr_reader_ffi
+    _read_qr_ffi_func = libqrReaderFfi
       .lookup<ffi.NativeFunction<ReadQRFunc>>('read_qr_ffi')
       .asFunction();
   }
 
-  static String read_qr_ffi(String path, int max_size) {
-    var utf8_path = path.toNativeUtf8();
-    var utf8_max_size = max_size.toString().toNativeUtf8();
-    var qr_data = instance._read_qr_ffi_func(utf8_path, utf8_max_size);
-    return qr_data.toDartString();
+  static String read_qr_ffi(String path, int maxSize) {
+    var utf8Path = path.toNativeUtf8();
+    var utf8MaxSize = maxSize.toString().toNativeUtf8();
+    var qrData = instance._read_qr_ffi_func!(utf8Path, utf8MaxSize);
+    return qrData.toDartString();
   }
 
-  Future<String> read_qr(String path, int max_size) async {
-    var receive_port = new ReceivePort();
+  Future<String> read_qr(String path, int maxSize) async {
+    var receivePort = new ReceivePort();
 
-    Isolate.spawn(read_qr_isolate, [ receive_port.sendPort, path, max_size ]);
-    var qr_data = await receive_port.first as String;
+    Isolate.spawn(read_qr_isolate, [ receivePort.sendPort, path, maxSize ]);
+    var qrData = await receivePort.first as String;
 
-    return qr_data;
+    return qrData;
   }
 
   static void read_qr_isolate(List<dynamic> message) async {
-    var send_port = message[0] as SendPort;
+    var sendPort = message[0] as SendPort;
     var path = message[1] as String;
-    var max_size = message[2] as int;
-    var qr_data = read_qr_ffi(path, max_size);
-    send_port.send(qr_data);
+    var maxSize = message[2] as int;
+    var qrData = read_qr_ffi(path, maxSize);
+    sendPort.send(qrData);
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 import 'package:path/path.dart' as Path;
 import 'dart:io' as IO;
@@ -12,7 +11,7 @@ import 'renamer.dart';
 import 'ui-file.dart';
 
 class QRenamerPage extends StatefulWidget {
-  QRenamerPage({Key key, this.title}) : super(key: key);
+  QRenamerPage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
@@ -44,12 +43,13 @@ class PageState extends State<QRenamerPage> {
     'dcr', 'pef', 'crw', 'iiq', '3fr', 'nrw', 'nef', 'mos', 'cr2', 'ari' ];
   bool isRunning = false;
   bool dryRun = false;
-  bool _maximizeAccuracy = false;
+  bool _maximizeAccuracy = true;
   bool _isDropping = false;
   int pctComplete = -1;
   TextEditingController _formatController = TextEditingController();
-  SharedPreferences _prefs;
-  Renamer _renamer;
+  late SharedPreferences _prefs;
+  late Renamer _renamer;
+  final _pageScrollController = ScrollController();
 
   PageState() {
     _formatController.text = "{qr} {file-name}";
@@ -93,7 +93,7 @@ class PageState extends State<QRenamerPage> {
   }
 
   void _browseDirectory() async {
-    final String directoryPath = await getDirectoryPath();
+    final String? directoryPath = await getDirectoryPath();
     if (directoryPath != null) {
       var uiFiles = _readDir(directoryPath);
       _sortByFileNumber(uiFiles);
@@ -119,8 +119,8 @@ class PageState extends State<QRenamerPage> {
 
   void _handleFileDrop(List urls) {
     List<UIFile> uiFiles = [];
-    var paths = urls.map((url) => url.toFilePath());
-    
+    var paths = urls.map((url) => url.path);
+
     for (var path in paths) {
       if (IO.FileSystemEntity.isDirectorySync(path)) {
         uiFiles.addAll(_readDir(path));
@@ -187,13 +187,12 @@ class PageState extends State<QRenamerPage> {
     _formatController.text = "$text$formatter";
   }
 
-  Widget barButton({String text, IconData icon, Function condition, Function onPressed}) {
+  Widget barButton({required String text, required IconData icon, required Function condition, required Function onPressed}) {
     return Container(
       padding: EdgeInsets.only(right: 2),
       child: TextButton(
         style: TextButton.styleFrom(
-          shape: RoundedRectangleBorder(side: BorderSide.none),
-          primary: !isRunning && condition() ? UIColors.text : UIColors.disabled,
+          foregroundColor: !isRunning && condition() ? UIColors.text : UIColors.disabled, shape: RoundedRectangleBorder(side: BorderSide.none),
           padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
           backgroundColor: UIColors.gray3,
         ),
@@ -201,7 +200,11 @@ class PageState extends State<QRenamerPage> {
           padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           child: Row(children: [ Icon(icon), Text("  " + text) ]),
         ),
-        onPressed: condition() && !isRunning ? onPressed : () {},
+        onPressed: () {
+          if (condition() && !isRunning) {
+            onPressed();
+          }
+        }
       )
     );
   }
@@ -285,9 +288,9 @@ class PageState extends State<QRenamerPage> {
 
   Widget openFilesBox() {
     return DropTarget(
-      onDragEntered: () { if (!isRunning) setState(() => _isDropping = true); },
-      onDragExited: () { if (!isRunning) setState(() => _isDropping = false); },
-      onDragDone: (urls) { if (!isRunning) _handleFileDrop(urls); },
+      onDragEntered: (_) { if (!isRunning) setState(() => _isDropping = true ); },
+      onDragExited: (_) { if (!isRunning) setState(() => _isDropping = false ); },
+      onDragDone: (evt) { if (!isRunning) _handleFileDrop(evt.files); },
       child: Expanded(
         child: Container(
           color: _isDropping ? UIColors.green1 : UIColors.gray2,
@@ -330,46 +333,76 @@ class PageState extends State<QRenamerPage> {
 
   Widget fileTable() {
     return DropTarget(
-      onDragEntered: () { if (!isRunning) setState(() => _isDropping = true); },
-      onDragExited: () { if (!isRunning) setState(() => _isDropping = false); },
-      onDragDone: (urls) { if (!isRunning) _handleFileDrop(urls); },
+      onDragEntered: (_) { if (!isRunning) setState(() => _isDropping = true); },
+      onDragExited: (_) { if (!isRunning) setState(() => _isDropping = false); },
+      onDragDone: (evt) { if (!isRunning) _handleFileDrop(evt.files); },
       child: Expanded(
         child: Container(
           color: _isDropping ? UIColors.green1 : UIColors.gray2,
           child: Scrollbar(
             child: SingleChildScrollView(
+              controller: _pageScrollController,
               child: Table(
                 columnWidths: {
                   0: FixedColumnWidth(36),
                 },
                 border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
-                children: files.map((f) => TableRow(
-                  children: [
-                    TableCell(child: Container(
-                      width: 20,
-                      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                      alignment: Alignment.centerLeft,
-                      child: Icon(
-                        Icons.check_circle,
-                        color: f.processed && !f.wasDryRun ? UIColors.green2 : f.decoded && !f.wasDryRun ? UIColors.blue : UIColors.gray3,
+                children: files.map((f) {
+                  return TableRow(
+                    children: [
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.middle,
+                        child: Container(
+                          width: 20,
+                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                          alignment: Alignment.centerLeft,
+                          child: Icon(
+                            Icons.check_circle,
+                            color: f.processed && !f.wasDryRun ? UIColors.green2 : f.decoded && !f.wasDryRun ? UIColors.blue : UIColors.gray3,
+                          ),
+                        )
                       ),
-                    )),
-                    TableCell(child: Container(
-                      padding: EdgeInsets.all(12),
-                      alignment: Alignment.centerLeft,
-                      child: Text(Path.basename(f.path), style: TextStyle(color: UIColors.text))
-                    )),
-                    TableCell(child: Container(
-                      padding: EdgeInsets.all(12),
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        Path.basename(f.newPath.length > 0 ? f.newPath : "unchanged"),
-                        style: TextStyle(color: f.newPath.length > 0 ? UIColors.text : UIColors.disabled))
-                    ))
-                  ]
-                )).toList(),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.middle,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                          alignment: Alignment.centerLeft,
+                          child: Text(Path.basename(f.path), style: TextStyle(color: UIColors.text))
+                        )
+                      ),
+                      TableCell(child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                        alignment: Alignment.centerLeft,
+                        child: TextField(
+                          controller: f.controller,
+                          onChanged: (value) {
+                            setState(() { f.qr = value; });
+                          },
+                          style: TextStyle(
+                            color: UIColors.text,
+                            backgroundColor: Colors.transparent,
+                          ),
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.zero
+                          ),
+                        ),
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.middle,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            Path.basename(f.newPath.length > 0 ? f.newPath : "unchanged"),
+                            style: TextStyle(color: f.newPath.length > 0 ? UIColors.text : UIColors.disabled))
+                        )
+                      )
+                    ]
+                  );
+                }).toList(),
               )
-            )
+            ),
+            controller: _pageScrollController,
           )
         )
       )
@@ -386,18 +419,18 @@ class PageState extends State<QRenamerPage> {
           ButtonBar(
             layoutBehavior: ButtonBarLayoutBehavior.padded,
             children: [
+              // TextButton(
+              //   style: TextButton.styleFrom(foregroundColor: isRunning ? UIColors.disabled : UIColors.text),
+              //   child: Row(
+              //     children: [
+              //       Icon(_maximizeAccuracy ? Icons.check_box_outlined : Icons.check_box_outline_blank),
+              //       Text(" Maximize Accuracy"),
+              //     ]
+              //   ),
+              //   onPressed: () { if (!isRunning) { setState(() { _maximizeAccuracy = !_maximizeAccuracy; }); } },
+              // ),
               TextButton(
-                style: TextButton.styleFrom(primary: isRunning ? UIColors.disabled : UIColors.text),
-                child: Row(
-                  children: [
-                    Icon(_maximizeAccuracy ? Icons.check_box_outlined : Icons.check_box_outline_blank),
-                    Text(" Maximize Accuracy"),
-                  ]
-                ),
-                onPressed: () { if (!isRunning) { setState(() { _maximizeAccuracy = !_maximizeAccuracy; }); } },
-              ),
-              TextButton(
-                style: TextButton.styleFrom(primary: isRunning ?  UIColors.disabled : UIColors.text),
+                style: TextButton.styleFrom(foregroundColor: isRunning ?  UIColors.disabled : UIColors.text),
                 child: Row(
                   children: [
                     Icon(dryRun ? Icons.check_box_outlined : Icons.check_box_outline_blank),
@@ -411,8 +444,7 @@ class PageState extends State<QRenamerPage> {
               ),
               TextButton(
                 style: TextButton.styleFrom(
-                  primary: UIColors.text,
-                  backgroundColor: UIColors.gray3,
+                  foregroundColor: UIColors.text, backgroundColor: UIColors.gray3,
                 ),
                 child: Container(
                   width: 70,

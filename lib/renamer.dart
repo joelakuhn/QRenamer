@@ -5,9 +5,10 @@ import 'package:path/path.dart' as Path;
 
 import 'qr-reader-ffi.dart';
 import 'page.dart';
+import 'ui-file.dart';
 
 class Renamer {
-  PageState _state;
+  late PageState _state;
   String _format = "";
   int _concurrencyLevel = 1;
   int _renameIndex = 0;
@@ -97,7 +98,7 @@ class Renamer {
     _state.outsideSetState();
   }
 
-  void _renameFile(file, qr) {
+  void _renameFile(UIFile file, String qr) {
     if (_format.indexOf("{qr}") < 0 && file.name.indexOf(qr) >= 0) return;
 
     var ext = Path.extension(file.name);
