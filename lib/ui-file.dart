@@ -29,7 +29,9 @@ class UIFile {
   String get qr { return _qr; }
   set qr(value) {
     _qr = value;
-    controller.text = value;
+    if (value != controller.text) {
+      controller.text = value;
+    }
   }
 
   String get name { return _name; }
