@@ -44,7 +44,6 @@ class PageState extends State<QRenamerPage> {
     'srf', 'sr2', 'mef', 'orf', 'srw', 'erf', 'kdc', 'dcs', 'rw2', 'raf',
     'dcr', 'pef', 'crw', 'iiq', '3fr', 'nrw', 'nef', 'mos', 'cr2', 'ari' ];
   bool isRunning = false;
-  bool dryRun = false;
   bool _maximizeAccuracy = true;
   bool _isDropping = false;
   int pctComplete = -1;
@@ -162,12 +161,6 @@ class PageState extends State<QRenamerPage> {
     if (isRunning) {
       _start();
     }
-  }
-
-  void _toggleDryrun() {
-    setState(() {
-      dryRun = !dryRun;
-    });
   }
 
   void _applyRename() {
@@ -373,7 +366,7 @@ class PageState extends State<QRenamerPage> {
                           alignment: Alignment.centerLeft,
                           child: Icon(
                             Icons.check_circle,
-                            color: f.processed && !f.wasDryRun ? UIColors.green2 : f.decoded && !f.wasDryRun ? UIColors.blue : UIColors.gray3,
+                            color: f.processed ? UIColors.green2 : f.decoded ? UIColors.blue : UIColors.gray3,
                           ),
                         )
                       ),

@@ -13,7 +13,6 @@ class UIFile {
   late Formatter _formatter;
 
   StringBrigade _qr = StringBrigade();
-  bool wasDryRun = false;
   bool decoded = false;
   bool processed = false;
   TextEditingController controller = TextEditingController();

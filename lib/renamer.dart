@@ -33,7 +33,7 @@ class Renamer {
 
     var file = _state.files[_renameIndex++];
 
-    if (file.processed && !file.wasDryRun) {
+    if (file.processed) {
       _handleFileComplete();
     }
     else {
@@ -49,7 +49,6 @@ class Renamer {
       .whenComplete(() {
         if (!_state.isRunning) return;
         file.decoded = true;
-        file.wasDryRun = _state.dryRun;
         _state.outsideSetState();
         _handleFileComplete();
       });
