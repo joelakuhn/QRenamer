@@ -8,7 +8,6 @@ class Renamer {
   late PageState _state;
   int _concurrencyLevel = 1;
   int _renameIndex = 0;
-  int _maxSize = 0;
   int _complete = 0;
   QRReaderFFI _qrReaderFfi = QRReaderFFI();
 
@@ -17,9 +16,8 @@ class Renamer {
     _concurrencyLevel = Math.max(1, (IO.Platform.numberOfProcessors / 3).floor());
   }
 
-  void start(format, maximizeAccuracy) async {
+  void start(String format) async {
     _renameIndex = 0;
-    _maxSize = maximizeAccuracy ? 0 : 1500;
     _complete = 0;
 
     for (var _ = 0; _ < _concurrencyLevel; _++) {
@@ -37,7 +35,7 @@ class Renamer {
       _handleFileComplete();
     }
     else {
-      _qrReaderFfi.read_qr(file.path, _maxSize)
+      _qrReaderFfi.read_qr(file.path, 0)
       .then((qr) {
         if (!_state.isRunning) return;
         file.qr = qr;

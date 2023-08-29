@@ -44,7 +44,6 @@ class PageState extends State<QRenamerPage> {
     'srf', 'sr2', 'mef', 'orf', 'srw', 'erf', 'kdc', 'dcs', 'rw2', 'raf',
     'dcr', 'pef', 'crw', 'iiq', '3fr', 'nrw', 'nef', 'mos', 'cr2', 'ari' ];
   bool isRunning = false;
-  bool _maximizeAccuracy = true;
   bool _isDropping = false;
   int pctComplete = -1;
   TextEditingController _formatController = TextEditingController();
@@ -145,7 +144,7 @@ class PageState extends State<QRenamerPage> {
     var format = _formatController.text;
     _formatter.format = format;
     _prefs.setString("format", format);
-    _renamer.start(format, _maximizeAccuracy);
+    _renamer.start(format);
   }
 
   void _closeFiles() {
@@ -427,16 +426,6 @@ class PageState extends State<QRenamerPage> {
           ButtonBar(
             layoutBehavior: ButtonBarLayoutBehavior.padded,
             children: [
-              // TextButton(
-              //   style: TextButton.styleFrom(foregroundColor: isRunning ? UIColors.disabled : UIColors.text),
-              //   child: Row(
-              //     children: [
-              //       Icon(_maximizeAccuracy ? Icons.check_box_outlined : Icons.check_box_outline_blank),
-              //       Text(" Maximize Accuracy"),
-              //     ]
-              //   ),
-              //   onPressed: () { if (!isRunning) { setState(() { _maximizeAccuracy = !_maximizeAccuracy; }); } },
-              // ),
               TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: UIColors.text, backgroundColor: UIColors.gray3,
