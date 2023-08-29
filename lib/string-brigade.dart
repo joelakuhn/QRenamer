@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 class StringBrigade {
   bool _ready = false;
   bool _isset = false;
