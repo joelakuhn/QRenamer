@@ -45,6 +45,7 @@ class PageState extends State<QRenamerPage> {
     'dcr', 'pef', 'crw', 'iiq', '3fr', 'nrw', 'nef', 'mos', 'cr2', 'ari' ];
   bool isRunning = false;
   bool _isDropping = false;
+  bool _renameApplied = false;
   int pctComplete = -1;
   TextEditingController _formatController = TextEditingController();
   late SharedPreferences _prefs;
@@ -172,20 +173,26 @@ class PageState extends State<QRenamerPage> {
         });
       }
     }
+    setState(() {
+      _renameApplied = true;
+    });
   }
 
   void _undo() {
-    isRunning = false;
     for (var file in files) {
+      file.processed = false;
+      file.decoded = false;
       if (file.path != file.originalPath) {
         var f = IO.File(file.path);
         f.rename(file.originalPath);
+        file.path = file.originalPath;
       }
     }
     setState(() {
       files = files;
       pctComplete = -1;
       isRunning = isRunning;
+      _renameApplied = false;
     });
   }
 
@@ -227,12 +234,6 @@ class PageState extends State<QRenamerPage> {
             condition: () => files.length > 0,
             onPressed: _closeFiles,
           ),
-          barButton(
-            text: "Undo",
-            icon: Icons.undo,
-            condition: () => files.any((f) => f.processed || f.decoded),
-            onPressed: _undo,
-          )
         ]
       )
     );
@@ -374,7 +375,7 @@ class PageState extends State<QRenamerPage> {
                         child: Container(
                           padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                           alignment: Alignment.centerLeft,
-                          child: Text(Path.basename(f.path), style: TextStyle(color: UIColors.text))
+                          child: Text(f.name, style: TextStyle(color: UIColors.text))
                         )
                       ),
                       TableCell(child: Container(
@@ -445,7 +446,7 @@ class PageState extends State<QRenamerPage> {
                 width: 10
               ),
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: isRunning ?  UIColors.disabled : UIColors.text),
+                style: TextButton.styleFrom(foregroundColor: isRunning ? UIColors.disabled : UIColors.text),
                 child: Row(
                   children: [
                     Icon(Icons.check_outlined),
@@ -453,6 +454,19 @@ class PageState extends State<QRenamerPage> {
                   ]
                 ),
                 onPressed: () { if (!isRunning) _applyRename(); },
+              ),
+              Container(
+                width: 10
+              ),
+              TextButton(
+                style: TextButton.styleFrom(foregroundColor: isRunning || !_renameApplied ? UIColors.disabled : UIColors.text),
+                child: Row(
+                  children: [
+                    Icon(Icons.undo),
+                    Text(" Undo"),
+                  ]
+                ),
+                onPressed: () { if (!isRunning && _renameApplied) _undo(); },
               ),
               Container(
                 width: 10
