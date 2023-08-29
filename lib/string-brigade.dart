@@ -1,6 +1,9 @@
+import 'dart:ffi';
+
 class StringBrigade {
   bool _ready = false;
   bool _isset = false;
+  bool _isreal = false;
   String _value = "";
   StringBrigade? _prev;
   StringBrigade? _next;
@@ -21,27 +24,38 @@ class StringBrigade {
 
   void setEmpty() {
     _ready = true;
+    if (_prev != null && _prev!._isset) {
+      _value = _prev!.value;
+      _isset = true;
+    }
   }
 
   void setValue(String value) {
     _value = value;
     _ready = true;
     _isset = true;
+
+    if (_next != null) {
+      _next!.checkahead(value);
+    }
+  }
+
+  bool checkahead(String value) {
+    if (_isset) {
+      return true;
+    }
+    else {
+      if (_next == null || _next!.checkahead(value)) {
+        _value = value;
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
   }
 
   String get value {
-    if (_ready) {
-      if (_isset) {
-        return _value;
-      }
-      else if (_prev != null) {
-        return _prev!.value;
-      }
-    }
-    return "";
-  }
-
-  String get immediateValue {
     return _value;
   }
 }

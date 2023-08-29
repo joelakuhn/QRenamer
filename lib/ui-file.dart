@@ -45,7 +45,7 @@ class UIFile {
     else {
       _qr.setValue(value);
     }
-    if (_qr.immediateValue != controller.text) {
+    if (_qr.value != controller.text) {
       controller.text = value;
     }
   }
