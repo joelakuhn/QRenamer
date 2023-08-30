@@ -156,6 +156,7 @@ class PageState extends State<QRenamerPage> {
   }
 
   void _closeFiles() {
+    StringBrigade.reset();
     setState(() {
       files = [];
     });
