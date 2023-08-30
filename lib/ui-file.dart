@@ -52,7 +52,12 @@ class UIFile {
   String get name { return _name; }
 
   String get newPath {
-    return _formatter.apply(this);
+    if (qr == "") {
+      return path;
+    }
+    else {
+      return _formatter.apply(this);
+    }
   }
 
   String get fileNumber { return _fileNumber; }
