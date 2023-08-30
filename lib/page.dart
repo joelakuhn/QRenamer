@@ -152,7 +152,7 @@ class PageState extends State<QRenamerPage> {
     var format = _formatController.text;
     _formatter.format = format;
     _prefs.setString("format", format);
-    _renamer.start(format);
+    _renamer.start();
   }
 
   void _closeFiles() {

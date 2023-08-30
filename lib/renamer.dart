@@ -16,7 +16,7 @@ class Renamer {
     _concurrencyLevel = Math.max(1, (IO.Platform.numberOfProcessors / 3).floor());
   }
 
-  void start(String format) async {
+  void start() async {
     _renameIndex = 0;
     _complete = 0;
 
