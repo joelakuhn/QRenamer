@@ -31,26 +31,21 @@ class Renamer {
 
     var file = _state.files[_renameIndex++];
 
-    if (file.processed) {
+    _qrReaderFfi.read_qr(file.path, 0)
+    .then((qr) {
+      if (!_state.isRunning) return;
+      file.qr = qr;
+    })
+    .catchError((_e) {
+      if (!_state.isRunning) return;
+      file.qr = "";
+    })
+    .whenComplete(() {
+      if (!_state.isRunning) return;
+      file.decoded = true;
+      _state.outsideSetState();
       _handleFileComplete();
-    }
-    else {
-      _qrReaderFfi.read_qr(file.path, 0)
-      .then((qr) {
-        if (!_state.isRunning) return;
-        file.qr = qr;
-      })
-      .catchError((_e) {
-        if (!_state.isRunning) return;
-        file.qr = "";
-      })
-      .whenComplete(() {
-        if (!_state.isRunning) return;
-        file.decoded = true;
-        _state.outsideSetState();
-        _handleFileComplete();
-      });
-    }
+    });
   }
 
   void _handleFileComplete() {
