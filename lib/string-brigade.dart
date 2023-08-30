@@ -1,5 +1,4 @@
 class StringBrigade {
-  bool _ready = false;
   bool _isset = false;
   bool _isreal = false;
   String _value = "";
@@ -21,7 +20,9 @@ class StringBrigade {
   }
 
   void setEmpty() {
-    _ready = true;
+    _isset = false;
+    _isreal = false;
+
     if (_prev != null && _prev!._isset) {
       _value = _prev!.value;
     }
@@ -36,7 +37,6 @@ class StringBrigade {
 
   void setValue(String value) {
     _value = value;
-    _ready = true;
     _isset = true;
     _isreal = true;
 
@@ -49,7 +49,7 @@ class StringBrigade {
   }
 
   String checkbehind() {
-    if (_isset) {
+    if (_isreal) {
       return _value;
     }
     else if (_prev != null) {
@@ -69,7 +69,7 @@ class StringBrigade {
     if (_isreal) {
       return true;
     }
-    else if (!_ready) {
+    else if (!_isset) {
       return false;
     }
     else {
