@@ -217,18 +217,12 @@ pub fn read_qr(path : String, max_size : u32) -> String {
         if img_result.is_some() {
             let orig_img = img_result.unwrap();
 
-            let mut decoder = quircs::Quirc::default();
-            let codes = decoder.identify(orig_img.width() as usize, orig_img.height() as usize, &orig_img);
+            let mut decoder = rqrr::PreparedImage::prepare(orig_img);
+            let codes = decoder.detect_grids();
 
             for code in codes {
-                match code {
-                    Ok(code) => match code.decode() {
-                        Ok(decoded) => match String::from_utf8(decoded.payload) {
-                            Ok(content) => { return content; }
-                            _ => {}
-                        }
-                        _ => {}
-                    }
+                match code.decode() {
+                    Ok((_meta, content)) => { return content },
                     _ => {}
                 }
             }
