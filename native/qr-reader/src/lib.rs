@@ -138,7 +138,7 @@ fn open_jpeg(path: &String, max_size : u32) -> Option<image::ImageBuffer<image::
             .from_path(path).ok()?;
 
         let mut img = decompressor.grayscale().ok()?;
-        let pixels : Vec<GRAY8> = img.read_scanlines()?;
+        let pixels : Vec<GRAY8> = img.read_scanlines().unwrap();
 
         let img_width = img.width() as u32;
         let img_height = img.height() as u32;
@@ -153,7 +153,7 @@ fn open_jpeg(path: &String, max_size : u32) -> Option<image::ImageBuffer<image::
             image::Luma([pixels[(neighbor_x + neighbor_y * img_width) as usize].0])
         });
 
-        img.finish_decompress();
+        img.finish().ok()?;
 
         Some(luma_img)
     });
@@ -215,7 +215,6 @@ pub fn read_qr(path : String, max_size : u32) -> String {
         };
 
         if img_result.is_some() {
-
             let orig_img = img_result.unwrap();
 
             let mut decoder = quircs::Quirc::default();
