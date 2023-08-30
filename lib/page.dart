@@ -401,8 +401,9 @@ class PageState extends State<QRenamerPage> {
                           padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            Path.basename(f.newPath.length > 0 ? f.newPath : "unchanged"),
-                            style: TextStyle(color: f.newPath.length > 0 ? UIColors.text : UIColors.disabled))
+                            Path.basename(f.qr != "" ? f.newPath : "unchanged"),
+                            style: TextStyle(color: f.newPath.length > 0 ? UIColors.text : UIColors.disabled)
+                          )
                         )
                       )
                     ]
