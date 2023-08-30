@@ -71,6 +71,13 @@ class PageState extends State<QRenamerPage> {
     this.setState(() { });
   }
 
+  void _updateFormat() {
+    _formatter.format = _formatController.text;
+    setState(() {
+      files = files;
+    });
+  }
+
   void _sortByFileNumber(List<UIFile> files) {
     files.sort((a, b) {
       if (a.intFileNumber == b.intFileNumber) {
@@ -199,6 +206,7 @@ class PageState extends State<QRenamerPage> {
   void _insertFormatter(String formatter) {
     var text = _formatController.text;
     _formatController.text = "$text$formatter";
+    _updateFormat();
   }
 
   Widget barButton({required String text, required IconData icon, required Function condition, required Function onPressed}) {
@@ -258,6 +266,7 @@ class PageState extends State<QRenamerPage> {
                 contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 border: OutlineInputBorder()
               ),
+              onChanged: (_) { _updateFormat(); },
             )
           )
         ]
