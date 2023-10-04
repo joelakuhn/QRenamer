@@ -350,6 +350,38 @@ class PageState extends State<QRenamerPage> {
     );
   }
 
+  _reveal(String path) {
+    IO.Process.run('/usr/bin/env', ['open', '-R', path]);
+  }
+
+  Future<void> _dialogBuilder(BuildContext context, UIFile file) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(file.name),
+          content: Image.file(IO.File(file.path), filterQuality: FilterQuality.medium,),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Show in Finder'),
+              onPressed: () { _reveal(file.path); },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Close'),
+              onPressed: () { Navigator.of(context).pop(); },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget fileTable() {
     return DropTarget(
       onDragEntered: (_) { if (!isRunning) setState(() => _isDropping = true); },
@@ -363,7 +395,8 @@ class PageState extends State<QRenamerPage> {
               controller: _pageScrollController,
               child: Table(
                 columnWidths: {
-                  0: FixedColumnWidth(36),
+                  0: FixedColumnWidth(50),
+                  1: FixedColumnWidth(80),
                 },
                 border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
                 children: files.map((f) {
@@ -382,16 +415,32 @@ class PageState extends State<QRenamerPage> {
                         )
                       ),
                       TableCell(
+                        child: InkWell(
+                          child: Image.file(
+                            IO.File(f.path),
+                            height: 80,
+                            cacheHeight: 80,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.none,
+                          ),
+                          onTap: () => _dialogBuilder(context, f),
+                        )
+                      ),
+                      TableCell(
                         verticalAlignment: TableCellVerticalAlignment.middle,
                         child: Container(
                           padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                           alignment: Alignment.centerLeft,
-                          child: Text(f.name, style: TextStyle(color: UIColors.text))
+                          child: InkWell(
+                            child: Text(f.name, style: TextStyle(color: UIColors.text)),
+                            onTap: () => _dialogBuilder(context, f),
+                          )
                         )
                       ),
                       TableCell(child: Container(
                         padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                         alignment: Alignment.centerLeft,
+                        height: 80,
                         child: TextField(
                           controller: f.controller,
                           onChanged: (value) {
