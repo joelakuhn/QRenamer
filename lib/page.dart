@@ -43,6 +43,7 @@ class PageState extends State<QRenamerPage> {
     'jpg', 'jpeg', 'png', 'bmp', 'gif', 'tga', 'tiff', 'webp', 'mrw', 'arw',
     'srf', 'sr2', 'mef', 'orf', 'srw', 'erf', 'kdc', 'dcs', 'rw2', 'raf',
     'dcr', 'pef', 'crw', 'iiq', '3fr', 'nrw', 'nef', 'mos', 'cr2', 'ari' ];
+  Map<String, Image> _imgCache = Map<String, Image>();
   bool isRunning = false;
   bool _isDropping = false;
   bool _renameApplied = false;
@@ -97,7 +98,7 @@ class PageState extends State<QRenamerPage> {
     final typeGroup = XTypeGroup(label: 'images', extensions: _imageExtensions);
     var xfiles = await openFiles(acceptedTypeGroups: [ typeGroup ]);
     if (xfiles.length > 0) {
-      var uiFiles = xfiles.map((xfile) => UIFile(xfile.path, _formatter)).toList();
+      var uiFiles = xfiles.map((xfile) => UIFile(xfile.path, _formatter, this)).toList();
       _sortByFileNumber(uiFiles);
       setState(() {
         files = uiFiles;
@@ -123,7 +124,7 @@ class PageState extends State<QRenamerPage> {
       if (IO.FileSystemEntity.isFileSync(dirFile.path)) {
         var ext = Path.extension(dirFile.path).replaceFirst(".", "").toLowerCase();
         if (_imageExtensions.any((imgExt) => imgExt == ext)) {
-          uiFiles.add(UIFile(dirFile.path, _formatter));
+          uiFiles.add(UIFile(dirFile.path, _formatter, this));
         }
       }
     }
@@ -139,7 +140,7 @@ class PageState extends State<QRenamerPage> {
         uiFiles.addAll(_readDir(path));
       }
       else {
-        uiFiles.add(UIFile(path, _formatter));
+        uiFiles.add(UIFile(path, _formatter, this));
       }
     }
     _sortByFileNumber(uiFiles);
@@ -382,6 +383,24 @@ class PageState extends State<QRenamerPage> {
     );
   }
 
+  Image readImage(String path) {
+    if (_imgCache.containsKey(path)) {
+      return _imgCache[path]!;
+    }
+
+    var file = IO.File(path);
+    var bytes = file.readAsBytesSync();
+    var img = Image.memory(
+      bytes,
+      height: 80,
+      cacheHeight: 80,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.none,
+    );
+    _imgCache[path] = img;
+    return img;
+  }
+
   Widget fileTable() {
     return DropTarget(
       onDragEntered: (_) { if (!isRunning) setState(() => _isDropping = true); },
@@ -416,13 +435,7 @@ class PageState extends State<QRenamerPage> {
                       ),
                       TableCell(
                         child: InkWell(
-                          child: Image.file(
-                            IO.File(f.path),
-                            height: 80,
-                            cacheHeight: 80,
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.none,
-                          ),
+                          child: f.preview.img,
                           onTap: () => _dialogBuilder(context, f),
                         )
                       ),

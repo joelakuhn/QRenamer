@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as Path;
+import 'package:qrenamer/lazy-image.dart';
+import 'package:qrenamer/page.dart';
 
 import 'formatter.dart';
 import 'string-brigade.dart';
@@ -11,16 +13,21 @@ class UIFile {
   late String _originalPath;
   late int _intFileNumber;
   late Formatter _formatter;
+  late PageState _state;
+  late LazyImage preview;
 
   StringBrigade _qr = StringBrigade();
   bool decoded = false;
   bool processed = false;
   TextEditingController controller = TextEditingController();
 
-  UIFile(String path, Formatter formatter) {
+  UIFile(String path, Formatter formatter, PageState state) {
     this._formatter = formatter;
+    this._state = state;
 
     this.path = path;
+    preview = new LazyImage(path, state);
+
     _originalPath = path;
     _name = Path.basename(path);
     _fileNumber = _extractFileNumber(path);
