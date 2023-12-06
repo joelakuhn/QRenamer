@@ -1,4 +1,4 @@
-use image::{self};
+use image::{self, ImageBuffer};
 use image::{Luma, GenericImageView, Pixel};
 use image::imageops::colorops::ColorMap;
 use image::io::Reader;
@@ -168,25 +168,48 @@ fn open_image(path : &String, max_size : u32) -> Option<image::ImageBuffer<image
     if !reader.is_err() {
         let decoded_img = reader.unwrap().decode();
         if !decoded_img.is_err() {
-            let img = decoded_img.unwrap();
-            let img_width = img.width();
-            let img_height = img.height();
-            let (w, h) = constrain_size(img_width, img_height, max_size);
-            // let (w, h) = (img_width, img_height);
-            let w_ratio = img_width as f32 / w as f32;
-            let h_ratio = img_height as f32 / h as f32;
+            return Some(decoded_img.unwrap().to_luma8());
+            // let img = decoded_img.unwrap();
+            // let img_width = img.width();
+            // let img_height = img.height();
+            // let (w, h) = constrain_size(img_width, img_height, max_size);
+            // // let (w, h) = (img_width, img_height);
+            // let w_ratio = img_width as f32 / w as f32;
+            // let h_ratio = img_height as f32 / h as f32;
 
-            let luma_img = image::ImageBuffer::from_fn(w, h, |x, y| {
-                let neighbor_x = clamp((x as f32 * w_ratio) as u32, 0, img_width);
-                let neighbor_y = clamp((y as f32 * h_ratio) as u32, 0, img_height);
+            // let luma_img = image::ImageBuffer::from_fn(w, h, |x, y| {
+            //     let neighbor_x = clamp((x as f32 * w_ratio) as u32, 0, img_width);
+            //     let neighbor_y = clamp((y as f32 * h_ratio) as u32, 0, img_height);
 
-                img.get_pixel(neighbor_x, neighbor_y).to_luma()
-            });
+            //     img.get_pixel(neighbor_x, neighbor_y).to_luma()
+            // });
 
-            return Some(luma_img);
+            // return Some(luma_img);
         }
     }
     return None;
+}
+
+pub fn myprepare(buf : &mut ImageBuffer<Luma<u8>, Vec<u8>>) {
+    let w = buf.width();
+    let h = buf.height();
+
+    for y in 0..h {
+        let mut row_total = 0u32;
+        for x in 0..w {
+            row_total += buf.get_pixel(x, y).0[0] as u32;
+        }
+        let row_average = (row_total / w) as u8;
+
+        for x in 0..w {
+            let fill = if buf.get_pixel(x, y).0[0] < row_average {
+                0x01
+            } else {
+                0x00
+            };
+            buf.put_pixel(x, y, Luma::<u8>([fill]));
+        }
+    }
 }
 
 pub fn read_qr(path : String, max_size : u32) -> String {
@@ -197,7 +220,7 @@ pub fn read_qr(path : String, max_size : u32) -> String {
         let img_result = match String::from(ext.unwrap().to_str().unwrap()).to_lowercase().as_str() {
             #[cfg(target_os = "macos")]
             "jpg" | "jpeg"
-                => open_jpeg(&path, max_size),
+                => open_image(&path, max_size),
 
             #[cfg(target_os = "windows")]
             "jpg" | "jpeg"
@@ -215,14 +238,46 @@ pub fn read_qr(path : String, max_size : u32) -> String {
         };
 
         if img_result.is_some() {
-            let orig_img = img_result.unwrap();
+            let orig = img_result.unwrap();
 
-            let mut decoder = rqrr::PreparedImage::prepare(orig_img);
+            let (w, h) = constrain_size(orig.width(), orig.height(), 1800);
+            let resized = image::imageops::resize(&orig, w, h, image::imageops::Triangle);
+
+            let img = resized.clone();
+            let mut decoder = rqrr::PreparedImage::prepare(img);
             let codes = decoder.detect_grids();
 
             for code in codes {
                 match code.decode() {
-                    Ok((_meta, content)) => { return content },
+                    Ok((_meta, content)) => { return content; },
+                    _ => {}
+                }
+            }
+
+
+            let mut img = resized.clone();
+            let block_radius = (((img.width() * img.height()) as f32).sqrt() / 20.0) as u32;
+            img = imageproc::contrast::adaptive_threshold(&img, block_radius);
+
+            let mut decoder = rqrr::PreparedImage::prepare(img);
+            let codes = decoder.detect_grids();
+
+            for code in codes {
+                match code.decode() {
+                    Ok((_meta, content)) => { return content; },
+                    _ => {}
+                }
+            }
+
+
+            let mut img = resized.clone();
+            myprepare(&mut img);
+            let mut decoder = rqrr::PreparedImage::without_preparation(img);
+            let codes = decoder.detect_grids();
+
+            for code in codes {
+                match code.decode() {
+                    Ok((_meta, content)) => { return content; },
                     _ => {}
                 }
             }
