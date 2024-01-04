@@ -13,15 +13,26 @@ class UIFile {
   late int _intFileNumber;
   late Formatter _formatter;
   late LazyImage preview;
+  late StringBrigade _stringBrigade;
+  bool _decoded = false;
+  bool _processed = false;
 
-  StringBrigade stringBrigade = StringBrigade();
-  bool decoded = false;
-  bool processed = false;
   TextEditingController controller = TextEditingController();
+  List<Function> _changeListeners = [];
+
+  bool get decoded { return _decoded; }
+  set decoded(bool value) {
+    _decoded = value;
+    notifyChange();
+  }
+
+  bool get processed { return _processed; }
+  set processed(bool value) {
+    _processed = value;
+    notifyChange();
+  }
 
   UIFile(String path, Formatter formatter) {
-    this._formatter = formatter;
-
     this.path = path;
     preview = new LazyImage(path);
 
@@ -29,10 +40,27 @@ class UIFile {
     _name = Path.basename(path);
     _fileNumber = _extractFileNumber(path);
     _intFileNumber = _fileNumber == "" ? 0 : int.parse(_fileNumber);
+
+    _formatter = formatter;
+    _formatter.addChangeListener(notifyChange);
+
+    _stringBrigade = StringBrigade();
+    _stringBrigade.addChangeListener(notifyChange);
+  }
+
+  void addChangeListener(Function listener) {
+    _changeListeners.add(listener);
+  }
+
+  void notifyChange() {
+    for (var listener in _changeListeners) {
+      listener();
+    }
   }
 
   void reset() {
-    stringBrigade = StringBrigade();
+    _stringBrigade = StringBrigade();
+    _stringBrigade.addChangeListener(notifyChange);
   }
 
   String _extractFileNumber(String path) {
@@ -40,15 +68,15 @@ class UIFile {
     return fileNumberMatches.length > 0 ? fileNumberMatches.last.group(0).toString() : "";
   }
 
-  String get qr { return stringBrigade.value; }
+  String get qr { return _stringBrigade.value; }
   set qr(String value) {
     if (value == "") {
-      stringBrigade.setEmpty();
+      _stringBrigade.setEmpty();
     }
     else {
-      stringBrigade.setValue(value);
+      _stringBrigade.setValue(value);
     }
-    if (stringBrigade.value != controller.text) {
+    if (_stringBrigade.value != controller.text) {
       controller.text = value;
     }
   }

@@ -65,13 +65,8 @@ class PageState extends State<QRenamerPage> {
     });
   }
 
-  void outsideSetState() {
-    this.setState(() { });
-  }
-
   void _updateFormat() {
     formatter.format = _formatController.text;
-    _fileTableWidget.outsideSetState();
   }
 
   void _start() {
@@ -82,7 +77,7 @@ class PageState extends State<QRenamerPage> {
   }
 
   void _closeFiles() {
-    _fileManager.files = [];
+    _fileManager.clear();
     _pctComplete = -1;
   }
 
@@ -126,7 +121,7 @@ class PageState extends State<QRenamerPage> {
       _renameApplied = false;
     });
     // TODO: Check that file table widget is updated
-    _fileTableWidget.outsideSetState();
+    _fileManager.notifyChange();
   }
 
   void _toggleCaseTransform() {
@@ -136,7 +131,7 @@ class PageState extends State<QRenamerPage> {
         .join(" ");
       file.qr = file.controller.text;
     }
-    _fileTableWidget.outsideSetState();
+    _fileManager.notifyChange();
   }
 
   void _insertFormatter(String formatter) {

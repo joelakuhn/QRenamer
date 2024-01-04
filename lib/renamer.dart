@@ -5,7 +5,6 @@ import 'package:qrenamer/file-manager.dart';
 
 import 'qr-reader-ffi.dart';
 import 'page.dart';
-import 'ui-file.dart';
 
 class Renamer {
   late PageState _state;
@@ -70,12 +69,16 @@ class Renamer {
 
   void _incrementComplete() {
     int newPctComplete = (++_complete / _fileManager.files.length * 100).round();
-    _pctListeners.forEach((listener) => listener(newPctComplete));
+    for (var listener in _pctListeners) {
+      listener(newPctComplete);
+    }
   }
 
   void _maybeStopRunning() {
     if (_complete >= _fileManager.files.length) {
-      _completeListeners.forEach((listener) => listener());
+      for (var listener in _completeListeners) {
+        listener();
+      }
     }
   }
 }

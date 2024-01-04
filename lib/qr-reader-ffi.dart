@@ -8,9 +8,9 @@ typedef ReadQRFunc = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8>, ffi.Pointer<U
 
 class QRReaderFFI {
 
-  ReadQRFunc? _read_qr_ffi_func = null;
+  ReadQRFunc? _read_qr_ffi_func;
 
-  static QRReaderFFI? _instance = null;
+  static QRReaderFFI? _instance;
 
   static QRReaderFFI get instance {
     if (_instance == null) {

@@ -12,8 +12,12 @@ class FileManager {
   List<UIFile> _files = [];
   List<UIFile> get files { return _files; }
   set files(newFiles) {
-    if (_files == newFiles) return;
     _files = newFiles;
+    notifyChange();
+  }
+
+  void clear() {
+    _files = [];
     notifyChange();
   }
 

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as Path;
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:qrenamer/qr-indicator-widget.dart';
+import 'package:qrenamer/qr-input-widget.dart';
 
 import 'string-brigade.dart';
 import 'page.dart';
@@ -18,10 +20,6 @@ class FileTableWidget extends StatefulWidget {
 
   FileTableWidget(PageState parent) {
     _state = FileTableWidgetState(parent);
-  }
-
-  void outsideSetState() {
-    _state.outsideSetState();
   }
 
   @override
@@ -186,15 +184,6 @@ class FileTableWidgetState extends State<FileTableWidget> {
     );
   }
 
-  void outsideSetState() {
-    setState(() { });
-  }
-
-  void closeFiles() {
-    StringBrigade.reset();
-    _fileManager.files = [];
-  }
-
   Widget body() {
     return DropTarget(
         onDragEntered: (_) { if (!_parent.isRunning) setState(() => _parent.isDropping = true); },
@@ -221,10 +210,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
                           width: 20,
                           padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                           alignment: Alignment.centerLeft,
-                          child: Icon(
-                            Icons.check_circle,
-                            color: f.processed ? UIColors.green2 : f.decoded ? UIColors.blue : UIColors.gray3,
-                          ),
+                          child: QRIndicatorWidget(f),
                         )
                       ),
                       TableCell(
@@ -248,20 +234,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
                         padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                         alignment: Alignment.centerLeft,
                         height: 80,
-                        child: TextField(
-                          controller: f.controller,
-                          onChanged: (value) {
-                            setState(() { f.qr = value; });
-                          },
-                          style: TextStyle(
-                            color: UIColors.text,
-                            backgroundColor: Colors.transparent,
-                            fontSize: 14,
-                          ),
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.zero
-                          ),
-                        ),
+                        child: QRInputWidget(f),
                       )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.middle,

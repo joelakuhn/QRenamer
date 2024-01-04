@@ -4,12 +4,12 @@ class StringBrigade {
   String _value = "";
   StringBrigade? _prev;
   StringBrigade? _next;
-  List<Function> _callbacks = [];
+  List<Function> _changeListeners = [];
 
   static StringBrigade? last;
 
-  void addCallback(Function callback) {
-    _callbacks.add(callback);
+  void addChangeListener(Function callback) {
+    _changeListeners.add(callback);
   }
 
   static reset() {
@@ -93,8 +93,8 @@ class StringBrigade {
   }
 
   void doCallbacks() {
-    for (var callback in _callbacks) {
-      callback();
+    for (var listener in _changeListeners) {
+      listener();
     }
   }
 
