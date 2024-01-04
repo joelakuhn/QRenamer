@@ -4,8 +4,13 @@ class StringBrigade {
   String _value = "";
   StringBrigade? _prev;
   StringBrigade? _next;
+  List<Function> _callbacks = [];
 
   static StringBrigade? last;
+
+  void addCallback(Function callback) {
+    _callbacks.add(callback);
+  }
 
   static reset() {
     StringBrigade.last = null;
@@ -25,6 +30,7 @@ class StringBrigade {
 
     if (_prev != null && _prev!._isset) {
       _value = _prev!.value;
+      doCallbacks();
     }
 
     if (_prev != null) {
@@ -39,6 +45,7 @@ class StringBrigade {
     _value = value;
     _isset = true;
     _isreal = true;
+    doCallbacks();
 
     if (_prev != null) {
       _prev!.checkbehind();
@@ -57,6 +64,7 @@ class StringBrigade {
       if (maybeValue != "") {
         _value = maybeValue;
         _isset = true;
+        doCallbacks();
       }
       return maybeValue;
     }
@@ -75,11 +83,18 @@ class StringBrigade {
     else {
       if (_next == null || _next!.checkahead(value)) {
         _value = value;
+        doCallbacks();
         return true;
       }
       else {
         return false;
       }
+    }
+  }
+
+  void doCallbacks() {
+    for (var callback in _callbacks) {
+      callback();
     }
   }
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as Path;
 import 'package:qrenamer/lazy-image.dart';
-import 'package:qrenamer/page.dart';
 
 import 'formatter.dart';
 import 'string-brigade.dart';
@@ -13,20 +12,18 @@ class UIFile {
   late String _originalPath;
   late int _intFileNumber;
   late Formatter _formatter;
-  late PageState _state;
   late LazyImage preview;
 
-  StringBrigade _qr = StringBrigade();
+  StringBrigade stringBrigade = StringBrigade();
   bool decoded = false;
   bool processed = false;
   TextEditingController controller = TextEditingController();
 
-  UIFile(String path, Formatter formatter, PageState state) {
+  UIFile(String path, Formatter formatter) {
     this._formatter = formatter;
-    this._state = state;
 
     this.path = path;
-    preview = new LazyImage(path, state);
+    preview = new LazyImage(path);
 
     _originalPath = path;
     _name = Path.basename(path);
@@ -35,7 +32,7 @@ class UIFile {
   }
 
   void reset() {
-    _qr = StringBrigade();
+    stringBrigade = StringBrigade();
   }
 
   String _extractFileNumber(String path) {
@@ -43,15 +40,15 @@ class UIFile {
     return fileNumberMatches.length > 0 ? fileNumberMatches.last.group(0).toString() : "";
   }
 
-  String get qr { return _qr.value; }
+  String get qr { return stringBrigade.value; }
   set qr(String value) {
     if (value == "") {
-      _qr.setEmpty();
+      stringBrigade.setEmpty();
     }
     else {
-      _qr.setValue(value);
+      stringBrigade.setValue(value);
     }
-    if (_qr.value != controller.text) {
+    if (stringBrigade.value != controller.text) {
       controller.text = value;
     }
   }
