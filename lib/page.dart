@@ -38,6 +38,7 @@ class PageState extends State<QRenamerPage> {
 
   PageState() {
     _formatController.text = "{qr} {file-name}";
+    formatter.format = _formatController.text;
     _renamer = Renamer(this);
     _fileTableWidget = FileTableWidget(this);
 
