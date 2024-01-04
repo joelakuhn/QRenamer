@@ -24,9 +24,9 @@ class PageState extends State<QRenamerPage> {
 
   // LOCALS
   Map<String, Image> _imgCache = Map<String, Image>();
-  bool isRunning = false;
   bool isDropping = false;
   bool _renameApplied = false;
+  bool isRunning = false;
   int _pctComplete = -1;
   final _fileManager = FileManager.instance;
   List<UIFile> _files = FileManager.instance.files;
@@ -39,17 +39,13 @@ class PageState extends State<QRenamerPage> {
   PageState() {
     _formatController.text = "{qr} {file-name}";
     formatter.format = _formatController.text;
-    _renamer = Renamer(this);
+    _renamer = Renamer();
     _fileTableWidget = FileTableWidget(this);
 
     _renamer.addPctListener((pct) {
       if (pct != _pctComplete) {
         setState(() { _pctComplete = pct; });
       }
-    });
-
-    _renamer.addCompleteListener(() {
-      setState(() { isRunning = false; });
     });
 
     _fileManager.addChangeListener(() {
@@ -75,6 +71,12 @@ class PageState extends State<QRenamerPage> {
     formatter.format = format;
     _prefs.setString("format", format);
     _renamer.start();
+    setState(() { isRunning = _renamer.isRunning; });
+  }
+
+  void _stop() {
+    _renamer.stop();
+    setState(() { isRunning = _renamer.isRunning; }); 
   }
 
   void _closeFiles() {
@@ -83,12 +85,8 @@ class PageState extends State<QRenamerPage> {
   }
 
   void _toggleRunning() {
-    setState(() {
-      isRunning = !isRunning;
-    });
-    if (isRunning) {
-      _start();
-    }
+    if (_renamer.isRunning) _stop();
+    else _start();
   }
 
   void _applyRename() {
@@ -118,10 +116,8 @@ class PageState extends State<QRenamerPage> {
     }
     setState(() {
       _pctComplete = -1;
-      isRunning = isRunning;
       _renameApplied = false;
     });
-    // TODO: Check that file table widget is updated
     _fileManager.notifyChange();
   }
 

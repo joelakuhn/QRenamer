@@ -4,10 +4,8 @@ import 'dart:io' as IO;
 import 'package:qrenamer/file-manager.dart';
 
 import 'qr-reader-ffi.dart';
-import 'page.dart';
 
 class Renamer {
-  late PageState _state;
   int _concurrencyLevel = 1;
   int _renameIndex = 0;
   int _complete = 0;
@@ -15,20 +13,26 @@ class Renamer {
   final List<Function> _pctListeners = [];
   final List<Function> _completeListeners = [];
   final _fileManager = FileManager.instance;
+  bool _isRunning = false;
 
+  bool get isRunning { return _isRunning; }
 
-  Renamer(PageState state) {
-    _state = state;
+  Renamer() {
     _concurrencyLevel = Math.max(1, (IO.Platform.numberOfProcessors / 3).floor());
   }
 
   void start() async {
     _renameIndex = 0;
     _complete = 0;
+    _isRunning = true;
 
     for (var _ = 0; _ < _concurrencyLevel; _++) {
       _renameOne();
     }
+  }
+
+  void stop() {
+    _isRunning = false;
   }
 
   void addPctListener(Function listener) {
@@ -40,22 +44,22 @@ class Renamer {
   }
 
   void _renameOne() async {
-    if (!_state.isRunning) return;
+    if (!_isRunning) return;
     if (_renameIndex >= _fileManager.files.length) return;
 
     var file = _fileManager.files[_renameIndex++];
 
     _qrReaderFfi.read_qr(file.path, 0)
     .then((qr) {
-      if (!_state.isRunning) return;
+      if (!_isRunning) return;
       file.qr = qr;
     })
     .catchError((_e) {
-      if (!_state.isRunning) return;
+      if (!_isRunning) return;
       file.qr = "";
     })
     .whenComplete(() {
-      if (!_state.isRunning) return;
+      if (!_isRunning) return;
       file.decoded = true;
       _handleFileComplete();
     });
@@ -76,6 +80,7 @@ class Renamer {
 
   void _maybeStopRunning() {
     if (_complete >= _fileManager.files.length) {
+      stop();
       for (var listener in _completeListeners) {
         listener();
       }
