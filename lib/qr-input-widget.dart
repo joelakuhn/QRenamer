@@ -27,7 +27,7 @@ class QRInputWidgetState extends State<QRInputWidget> {
     return TextField(
       controller: _file.controller,
       onChanged: (value) {
-        setState(() { _file.qr = value; });
+        _file.qr = value;
       },
       style: TextStyle(
         color: UIColors.text,
