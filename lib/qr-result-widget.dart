@@ -4,7 +4,7 @@ import 'ui-file.dart';
 import 'ui-colors.dart';
 
 class QRResultWidget extends StatefulWidget {
-  late UIFile _file;
+  late final UIFile _file;
 
   QRResultWidget(UIFile file) {
     _file = file;

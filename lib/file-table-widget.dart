@@ -11,6 +11,7 @@ import 'ui-file.dart';
 import 'bar-button.dart';
 import 'ui-colors.dart';
 import 'qr-result-widget.dart';
+import 'file-manager.dart';
 
 class FileTableWidget extends StatefulWidget {
   late final FileTableWidgetState _state;
@@ -19,16 +20,8 @@ class FileTableWidget extends StatefulWidget {
     _state = FileTableWidgetState(parent);
   }
 
-  void closeFiles() {
-    _state.closeFiles();
-  }
-
   void outsideSetState() {
     _state.outsideSetState();
-  }
-
-  List<UIFile> get files {
-    return _state.files;
   }
 
   @override
@@ -37,8 +30,9 @@ class FileTableWidget extends StatefulWidget {
 
 class FileTableWidgetState extends State<FileTableWidget> {
   late PageState _parent;
-  List<UIFile> files = [];
   final _pageScrollController = ScrollController();
+  final _fileManager = FileManager.instance;
+  List<UIFile> _files = FileManager.instance.files;
   final List<String> imageExtensions = [
     'jpg', 'jpeg', 'png', 'bmp', 'gif', 'tga', 'tiff', 'webp', 'mrw', 'arw',
     'srf', 'sr2', 'mef', 'orf', 'srw', 'erf', 'kdc', 'dcs', 'rw2', 'raf',
@@ -46,6 +40,9 @@ class FileTableWidgetState extends State<FileTableWidget> {
 
   FileTableWidgetState(PageState parent) {
     _parent = parent;
+    _fileManager.addChangeListener(() {
+      setState(() { _files = FileManager.instance.files; });
+    });
   }
 
   _reveal(String path) {
@@ -101,15 +98,8 @@ class FileTableWidgetState extends State<FileTableWidget> {
     if (xfiles.length > 0) {
       var uiFiles = xfiles.map((xfile) => UIFile(xfile.path, _parent.formatter)).toList();
       _sortByFileNumber(uiFiles);
-      _setFiles(uiFiles);
+      _fileManager.files = uiFiles;
     }
-  }
-
-  void _setFiles(List<UIFile> files) {
-    setState(() {
-      this.files = files;
-      _parent.outsideSetState();
-    });
   }
 
   void _browseDirectory() async {
@@ -117,7 +107,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
     if (directoryPath != null) {
       var uiFiles = _readDir(directoryPath);
       _sortByFileNumber(uiFiles);
-      _setFiles(uiFiles);
+      _fileManager.files = uiFiles;
     }
   }
 
@@ -148,7 +138,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
       }
     }
     _sortByFileNumber(uiFiles);
-    _setFiles(uiFiles);
+    _fileManager.files = uiFiles;
   }
 
   Widget openFilesBox() {
@@ -202,7 +192,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
 
   void closeFiles() {
     StringBrigade.reset();
-    _setFiles([]);
+    _fileManager.files = [];
   }
 
   Widget body() {
@@ -222,7 +212,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
                   1: FixedColumnWidth(80),
                 },
                 border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
-                children: files.map((f) {
+                children: _files.map((f) {
                   return TableRow(
                     children: [
                       TableCell( 
@@ -296,7 +286,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: files.length > 0 ? body() : openFilesBox()
+      child: _files.length > 0 ? body() : openFilesBox()
     );
   }
 }

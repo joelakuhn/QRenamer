@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-
-import 'package:qrenamer/file-table-widget.dart';
-import 'package:qrenamer/ui-file.dart';
 import 'dart:io' as IO;
 
+import 'package:flutter/material.dart';
+import 'package:qrenamer/ui-file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'file-table-widget.dart';
+import 'file-manager.dart';
 import 'renamer.dart';
 import 'formatter.dart';
 import 'bar-button.dart';
@@ -28,6 +28,8 @@ class PageState extends State<QRenamerPage> {
   bool isDropping = false;
   bool _renameApplied = false;
   int _pctComplete = -1;
+  final _fileManager = FileManager.instance;
+  List<UIFile> _files = FileManager.instance.files;
   TextEditingController _formatController = TextEditingController();
   late SharedPreferences _prefs;
   late Renamer _renamer;
@@ -47,6 +49,10 @@ class PageState extends State<QRenamerPage> {
 
     _renamer.addCompleteListener(() {
       setState(() { isRunning = false; });
+    });
+
+    _fileManager.addChangeListener(() {
+      setState(() { _files = _fileManager.files; });
     });
 
     SharedPreferences.getInstance()
@@ -72,11 +78,11 @@ class PageState extends State<QRenamerPage> {
     var format = _formatController.text;
     formatter.format = format;
     _prefs.setString("format", format);
-    _renamer.start(_fileTableWidget.files);
+    _renamer.start();
   }
 
   void _closeFiles() {
-    _fileTableWidget.closeFiles();
+    _fileManager.files = [];
     _pctComplete = -1;
   }
 
@@ -90,7 +96,7 @@ class PageState extends State<QRenamerPage> {
   }
 
   void _applyRename() {
-    for (var file in _fileTableWidget.files) {
+    for (var file in _fileManager.files) {
       if (file.newPath != file.path) {
         var f = IO.File(file.path);
         f.rename(file.newPath)
@@ -105,7 +111,7 @@ class PageState extends State<QRenamerPage> {
   }
 
   void _undo() {
-    for (var file in _fileTableWidget.files) {
+    for (var file in _fileManager.files) {
       file.processed = false;
       file.decoded = false;
       if (file.path != file.originalPath) {
@@ -124,7 +130,7 @@ class PageState extends State<QRenamerPage> {
   }
 
   void _toggleCaseTransform() {
-    for (var file in _fileTableWidget.files) {
+    for (var file in _fileManager.files) {
       file.controller.text = file.controller.text.split(RegExp("\\s+"))
         .map((e) => e.length > 0 ? e[0].toUpperCase() + e.substring(1).toLowerCase() : e)
         .join(" ");
@@ -148,14 +154,14 @@ class PageState extends State<QRenamerPage> {
           BarButton(
             text: "Close Files",
             icon: Icons.close,
-            condition: () => _fileTableWidget.files.length > 0 && !isRunning,
+            condition: () => _files.length > 0 && !isRunning,
             onPressed: _closeFiles,
           ),
           Spacer(flex: 1),
           BarButton(
             text: "Convert to Title Case",
             icon: Icons.format_size,
-            condition: () => _fileTableWidget.files.length > 0 && !isRunning,
+            condition: () => _files.length > 0 && !isRunning,
             onPressed: _toggleCaseTransform,
           ),
         ]

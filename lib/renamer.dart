@@ -1,6 +1,8 @@
 import 'dart:math' as Math;
 import 'dart:io' as IO;
 
+import 'package:qrenamer/file-manager.dart';
+
 import 'qr-reader-ffi.dart';
 import 'page.dart';
 import 'ui-file.dart';
@@ -11,9 +13,9 @@ class Renamer {
   int _renameIndex = 0;
   int _complete = 0;
   QRReaderFFI _qrReaderFfi = QRReaderFFI();
-  List<UIFile> _files = [];
   final List<Function> _pctListeners = [];
   final List<Function> _completeListeners = [];
+  final _fileManager = FileManager.instance;
 
 
   Renamer(PageState state) {
@@ -21,10 +23,9 @@ class Renamer {
     _concurrencyLevel = Math.max(1, (IO.Platform.numberOfProcessors / 3).floor());
   }
 
-  void start(List<UIFile> files) async {
+  void start() async {
     _renameIndex = 0;
     _complete = 0;
-    _files = files;
 
     for (var _ = 0; _ < _concurrencyLevel; _++) {
       _renameOne();
@@ -41,9 +42,9 @@ class Renamer {
 
   void _renameOne() async {
     if (!_state.isRunning) return;
-    if (_renameIndex >= _files.length) return;
+    if (_renameIndex >= _fileManager.files.length) return;
 
-    var file = _files[_renameIndex++];
+    var file = _fileManager.files[_renameIndex++];
 
     _qrReaderFfi.read_qr(file.path, 0)
     .then((qr) {
@@ -68,12 +69,12 @@ class Renamer {
   }
 
   void _incrementComplete() {
-    int newPctComplete = (++_complete / _files.length * 100).round();
+    int newPctComplete = (++_complete / _fileManager.files.length * 100).round();
     _pctListeners.forEach((listener) => listener(newPctComplete));
   }
 
   void _maybeStopRunning() {
-    if (_complete >= _files.length) {
+    if (_complete >= _fileManager.files.length) {
       _completeListeners.forEach((listener) => listener());
     }
   }
