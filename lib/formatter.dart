@@ -1,25 +1,16 @@
 import 'package:path/path.dart' as Path;
 
 import 'ui-file.dart';
+import 'event.dart';
 
 class Formatter {
-  List<Function> _changeListeners = [];
+  final Event changeEvent = Event();
 
   String _format = "";
   String get format { return _format; }
   set format(newFormat) {
     _format = newFormat;
-    notifyChange();
-  }
-
-  void addChangeListener(Function listener) {
-    _changeListeners.add(listener);
-  }
-
-  void notifyChange() {
-    for (var listener in _changeListeners) {
-      listener();
-    }
+    changeEvent.emit();
   }
 
   String apply(UIFile file) {

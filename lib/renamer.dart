@@ -1,19 +1,19 @@
 import 'dart:math' as Math;
 import 'dart:io' as IO;
 
-import 'package:qrenamer/file-manager.dart';
-
+import 'file-manager.dart';
 import 'qr-reader-ffi.dart';
+import 'event.dart';
 
 class Renamer {
   int _concurrencyLevel = 1;
   int _renameIndex = 0;
   int _complete = 0;
   QRReaderFFI _qrReaderFfi = QRReaderFFI();
-  final List<Function> _pctListeners = [];
-  final List<Function> _completeListeners = [];
   final _fileManager = FileManager.instance;
   bool _isRunning = false;
+  final Event pctEvent = Event();
+  final Event completeEvent = Event();
 
   bool get isRunning { return _isRunning; }
 
@@ -35,12 +35,8 @@ class Renamer {
     _isRunning = false;
   }
 
-  void addPctListener(Function listener) {
-    _pctListeners.add(listener);
-  }
-
-  void addCompleteListener(Function listener) {
-    _completeListeners.add(listener);
+  int get pctComplete {
+    return (_complete / _fileManager.files.length * 100).round();
   }
 
   void _renameOne() async {
@@ -72,18 +68,14 @@ class Renamer {
   }
 
   void _incrementComplete() {
-    int newPctComplete = (++_complete / _fileManager.files.length * 100).round();
-    for (var listener in _pctListeners) {
-      listener(newPctComplete);
-    }
+    _complete++;
+    pctEvent.emit();
   }
 
   void _maybeStopRunning() {
     if (_complete >= _fileManager.files.length) {
       stop();
-      for (var listener in _completeListeners) {
-        listener();
-      }
+      completeEvent.emit();
     }
   }
 }

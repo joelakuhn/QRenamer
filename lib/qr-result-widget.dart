@@ -19,7 +19,7 @@ class QRResultWidgetState extends State<QRResultWidget> {
 
   QRResultWidgetState(UIFile file) {
     _file = file;
-    _file.addChangeListener(() {
+    _file.onChange.bind(this, () {
       setState(() { _file = _file; });
     });
   }

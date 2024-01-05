@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as Path;
-import 'package:qrenamer/lazy-image.dart';
 
 import 'formatter.dart';
 import 'string-brigade.dart';
+import 'event.dart';
 
 class UIFile {
   late String path;
@@ -12,29 +12,27 @@ class UIFile {
   late String _originalPath;
   late int _intFileNumber;
   late Formatter _formatter;
-  late LazyImage preview;
   late StringBrigade _stringBrigade;
   bool _decoded = false;
   bool _processed = false;
+  Event onChange = Event();
 
   TextEditingController controller = TextEditingController();
-  List<Function> _changeListeners = [];
 
   bool get decoded { return _decoded; }
   set decoded(bool value) {
     _decoded = value;
-    notifyChange();
+    onChange.emit();
   }
 
   bool get processed { return _processed; }
   set processed(bool value) {
     _processed = value;
-    notifyChange();
+    onChange.emit();
   }
 
   UIFile(String path, Formatter formatter) {
     this.path = path;
-    preview = new LazyImage(path);
 
     _originalPath = path;
     _name = Path.basename(path);
@@ -42,25 +40,15 @@ class UIFile {
     _intFileNumber = _fileNumber == "" ? 0 : int.parse(_fileNumber);
 
     _formatter = formatter;
-    _formatter.addChangeListener(notifyChange);
+    _formatter.changeEvent.bind(this, onChange.emit);
 
     _stringBrigade = StringBrigade();
-    _stringBrigade.addChangeListener(notifyChange);
-  }
-
-  void addChangeListener(Function listener) {
-    _changeListeners.add(listener);
-  }
-
-  void notifyChange() {
-    for (var listener in _changeListeners) {
-      listener();
-    }
+    _stringBrigade.changeEvent.bind(this, onChange.emit);
   }
 
   void reset() {
     _stringBrigade = StringBrigade();
-    _stringBrigade.addChangeListener(notifyChange);
+    _stringBrigade.changeEvent.bind(this, onChange.emit);
   }
 
   String _extractFileNumber(String path) {

@@ -18,7 +18,7 @@ class QRInputWidgetState extends State<QRInputWidget> {
 
   QRInputWidgetState(UIFile file) {
     _file = file;
-    _file.addChangeListener(() {
+    _file.onChange.bind(this, () {
       setState(() { _file = file; });
     });
   }

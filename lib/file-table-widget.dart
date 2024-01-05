@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as Path;
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:qrenamer/qr-indicator-widget.dart';
-import 'package:qrenamer/qr-input-widget.dart';
+import 'package:qrenamer/lazy-image.dart';
 
+import 'qr-indicator-widget.dart';
+import 'qr-input-widget.dart';
 import 'string-brigade.dart';
 import 'page.dart';
 import 'ui-file.dart';
@@ -38,8 +39,8 @@ class FileTableWidgetState extends State<FileTableWidget> {
 
   FileTableWidgetState(PageState parent) {
     _parent = parent;
-    _fileManager.addChangeListener(() {
-      setState(() { _files = FileManager.instance.files; });
+    _fileManager.changeEvent.bind(this, () {
+      setState(() { _files = _fileManager.files; });
     });
   }
 
@@ -136,6 +137,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
       }
     }
     _sortByFileNumber(uiFiles);
+    _fileManager.files.clear();
     _fileManager.files = uiFiles;
   }
 
@@ -184,73 +186,72 @@ class FileTableWidgetState extends State<FileTableWidget> {
     );
   }
 
-  Widget body() {
-    return DropTarget(
-        onDragEntered: (_) { if (!_parent.isRunning) setState(() => _parent.isDropping = true); },
-      onDragExited: (_) { if (!_parent.isRunning) setState(() => _parent.isDropping = false); },
-      onDragDone: (evt) { if (!_parent.isRunning) handleFileDrop(evt.files); },
-      child: Expanded(
-        child: Container(
-          color: _parent.isDropping ? UIColors.green1 : UIColors.gray2,
-          child: Scrollbar(
-            child: SingleChildScrollView(
-              controller: _pageScrollController,
-              child: Table(
-                columnWidths: {
-                  0: FixedColumnWidth(50),
-                  1: FixedColumnWidth(80),
-                },
-                border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
-                children: _files.map((f) {
-                  return TableRow(
-                    children: [
-                      TableCell( 
-                        verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: Container(
-                          width: 20,
-                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-                          alignment: Alignment.centerLeft,
-                          child: QRIndicatorWidget(f),
-                        )
-                      ),
-                      TableCell(
-                        child: InkWell(
-                          child: f.preview,
-                          onTap: () => _dialogBuilder(context, f),
-                        )
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-                          alignment: Alignment.centerLeft,
-                          child: InkWell(
-                            child: Text(f.name, style: TextStyle(color: UIColors.text)),
-                            onTap: () => _dialogBuilder(context, f),
-                          )
-                        )
-                      ),
-                      TableCell(child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-                        alignment: Alignment.centerLeft,
-                        height: 80,
-                        child: QRInputWidget(f),
-                      )),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-                          alignment: Alignment.centerLeft,
-                          child: QRResultWidget(f),
-                        )
-                      )
-                    ]
-                  );
-                }).toList(),
+  List<TableRow> _tableRows() {
+    return _files.map((f) {
+      return TableRow(
+        children: [
+          TableCell(
+            verticalAlignment: TableCellVerticalAlignment.middle,
+            child: Container(
+              width: 20,
+              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+              alignment: Alignment.centerLeft,
+              child: QRIndicatorWidget(f),
+            )
+          ),
+          TableCell(
+            child: InkWell(
+              child: LazyImage(f.path),
+              onTap: () => _dialogBuilder(context, f),
+            )
+          ),
+          TableCell(
+            verticalAlignment: TableCellVerticalAlignment.middle,
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+              alignment: Alignment.centerLeft,
+              child: InkWell(
+                child: Text(f.name, style: TextStyle(color: UIColors.text)),
+                onTap: () => _dialogBuilder(context, f),
               )
-            ),
-            controller: _pageScrollController,
+            )
+          ),
+          TableCell(child: Container(
+            padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+            alignment: Alignment.centerLeft,
+            height: 80,
+            child: QRInputWidget(f),
+          )),
+          TableCell(
+            verticalAlignment: TableCellVerticalAlignment.middle,
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+              alignment: Alignment.centerLeft,
+              child: QRResultWidget(f),
+            )
           )
+        ]
+      );
+    }).toList();
+  }
+
+  Widget body() {
+    return Expanded(
+      child: Container(
+        color: _parent.isDropping ? UIColors.green1 : UIColors.gray2,
+        child: Scrollbar(
+          child: SingleChildScrollView(
+            controller: _pageScrollController,
+            child: Table(
+              columnWidths: {
+                0: FixedColumnWidth(50),
+                1: FixedColumnWidth(80),
+              },
+              border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
+              children: _tableRows(),
+            )
+          ),
+          controller: _pageScrollController,
         )
       )
     );

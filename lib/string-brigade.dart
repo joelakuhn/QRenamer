@@ -1,16 +1,14 @@
+import 'event.dart';
+
 class StringBrigade {
   bool _isset = false;
   bool _isreal = false;
   String _value = "";
   StringBrigade? _prev;
   StringBrigade? _next;
-  List<Function> _changeListeners = [];
+  final Event changeEvent = Event();
 
   static StringBrigade? last;
-
-  void addChangeListener(Function callback) {
-    _changeListeners.add(callback);
-  }
 
   static reset() {
     StringBrigade.last = null;
@@ -30,7 +28,7 @@ class StringBrigade {
 
     if (_prev != null && _prev!._isset) {
       _value = _prev!.value;
-      doCallbacks();
+      changeEvent.emit();
     }
 
     if (_prev != null) {
@@ -45,7 +43,7 @@ class StringBrigade {
     _value = value;
     _isset = true;
     _isreal = true;
-    doCallbacks();
+    changeEvent.emit();
 
     if (_prev != null) {
       _prev!.checkbehind();
@@ -64,7 +62,7 @@ class StringBrigade {
       if (maybeValue != "") {
         _value = maybeValue;
         _isset = true;
-        doCallbacks();
+        changeEvent.emit();
       }
       return maybeValue;
     }
@@ -83,18 +81,12 @@ class StringBrigade {
     else {
       if (_next == null || _next!.checkahead(value)) {
         _value = value;
-        doCallbacks();
+        changeEvent.emit();
         return true;
       }
       else {
         return false;
       }
-    }
-  }
-
-  void doCallbacks() {
-    for (var listener in _changeListeners) {
-      listener();
     }
   }
 

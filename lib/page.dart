@@ -1,9 +1,9 @@
 import 'dart:io' as IO;
 
 import 'package:flutter/material.dart';
-import 'package:qrenamer/ui-file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'ui-file.dart';
 import 'file-table-widget.dart';
 import 'file-manager.dart';
 import 'renamer.dart';
@@ -42,13 +42,17 @@ class PageState extends State<QRenamerPage> {
     _renamer = Renamer();
     _fileTableWidget = FileTableWidget(this);
 
-    _renamer.addPctListener((pct) {
-      if (pct != _pctComplete) {
-        setState(() { _pctComplete = pct; });
+    _renamer.pctEvent.bind(this, () {
+      if (_renamer.pctComplete != _pctComplete) {
+        setState(() { _pctComplete = _renamer.pctComplete; });
       }
     });
 
-    _fileManager.addChangeListener(() {
+    _renamer.completeEvent.bind(this, () {
+      setState(() { isRunning = _renamer.isRunning; });
+    });
+
+    _fileManager.changeEvent.bind(this, () {
       setState(() { _files = _fileManager.files; });
     });
 
@@ -76,7 +80,7 @@ class PageState extends State<QRenamerPage> {
 
   void _stop() {
     _renamer.stop();
-    setState(() { isRunning = _renamer.isRunning; }); 
+    setState(() { isRunning = _renamer.isRunning; });
   }
 
   void _closeFiles() {
@@ -118,7 +122,7 @@ class PageState extends State<QRenamerPage> {
       _pctComplete = -1;
       _renameApplied = false;
     });
-    _fileManager.notifyChange();
+    _fileManager.changeEvent.emit();
   }
 
   void _toggleCaseTransform() {
@@ -128,7 +132,7 @@ class PageState extends State<QRenamerPage> {
         .join(" ");
       file.qr = file.controller.text;
     }
-    _fileManager.notifyChange();
+    _fileManager.changeEvent.emit();
   }
 
   void _insertFormatter(String formatter) {
@@ -247,7 +251,7 @@ class PageState extends State<QRenamerPage> {
             children: [
               TextButton(
                 style: TextButton.styleFrom(
-                  foregroundColor: UIColors.text, backgroundColor: UIColors.gray3,
+                  foregroundColor: _fileManager.hasFiles ? UIColors.text : UIColors.disabled, backgroundColor: UIColors.gray3,
                 ),
                 child: Container(
                   width: 70,
@@ -264,7 +268,7 @@ class PageState extends State<QRenamerPage> {
                 width: 10
               ),
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: isRunning ? UIColors.disabled : UIColors.text),
+                style: TextButton.styleFrom(foregroundColor: isRunning || !_fileManager.hasFiles ? UIColors.disabled : UIColors.text),
                 child: Row(
                   children: [
                     Icon(Icons.check_outlined),
@@ -277,7 +281,7 @@ class PageState extends State<QRenamerPage> {
                 width: 10
               ),
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: isRunning || !_renameApplied ? UIColors.disabled : UIColors.text),
+                style: TextButton.styleFrom(foregroundColor: isRunning || !_fileManager.hasFiles || !_renameApplied ? UIColors.disabled : UIColors.text),
                 child: Row(
                   children: [
                     Icon(Icons.undo),

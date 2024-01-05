@@ -18,9 +18,8 @@ class QRIndicatorWidgetState extends State<QRIndicatorWidget> {
 
   QRIndicatorWidgetState(UIFile file) {
     _file = file;
-    _file.addChangeListener(() {
-      setState(() {
-        _file = _file; });
+    _file.onChange.bind(this, () {
+      if (mounted) setState(() { _file = _file; });
     });
   }
 
