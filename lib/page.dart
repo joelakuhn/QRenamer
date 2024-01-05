@@ -71,7 +71,7 @@ class PageState extends State<QRenamerPage> {
     formatter.format = format;
     _prefs.setString("format", format);
     _renamer.start();
-    setState(() { isRunning = _renamer.isRunning; });
+    setState(() { isRunning = _renamer.isRunning;_pctComplete = -1; });
   }
 
   void _stop() {
