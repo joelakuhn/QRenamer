@@ -235,7 +235,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
     }).toList();
   }
 
-  Widget body() {
+  Widget _table() {
     return Expanded(
       child: Container(
         color: _parent.isDropping ? UIColors.green1 : UIColors.gray2,
@@ -260,7 +260,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: _files.length > 0 ? body() : openFilesBox()
+      child: _files.length > 0 ? _table() : _openFilesBox()
     );
   }
 }
