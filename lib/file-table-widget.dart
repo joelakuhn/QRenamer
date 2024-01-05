@@ -124,7 +124,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
     return uiFiles;
   }
 
-  void handleFileDrop(List urls) {
+  void _handleFileDrop(List urls) {
     List<UIFile> uiFiles = [];
     var paths = urls.map((url) => url.path);
 
@@ -141,11 +141,11 @@ class FileTableWidgetState extends State<FileTableWidget> {
     _fileManager.files = uiFiles;
   }
 
-  Widget openFilesBox() {
+  Widget _openFilesBox() {
     return DropTarget(
       onDragEntered: (_) { if (!_parent.isRunning) setState(() => _parent.isDropping = true ); },
       onDragExited: (_) { if (!_parent.isRunning) setState(() => _parent.isDropping = false ); },
-      onDragDone: (evt) { if (!_parent.isRunning) handleFileDrop(evt.files); },
+      onDragDone: (evt) { if (!_parent.isRunning) _handleFileDrop(evt.files); },
       child: Expanded(
         child: Container(
           color: _parent.isDropping ? UIColors.green1 : UIColors.gray2,
