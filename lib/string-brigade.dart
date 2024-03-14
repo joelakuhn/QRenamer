@@ -75,7 +75,7 @@ class StringBrigade {
     if (_isreal) {
       return true;
     }
-    else if (!_isset) {
+    else if (_isset) {
       return false;
     }
     else {
