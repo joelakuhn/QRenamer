@@ -239,20 +239,21 @@ pub fn read_qr(path : String, max_size : u32) -> String {
 
         if img_result.is_some() {
             let orig = img_result.unwrap();
+            for size in [ 900, 1200, 1800 ] {
 
-            let (w, h) = constrain_size(orig.width(), orig.height(), 1800);
-            let resized = image::imageops::resize(&orig, w, h, image::imageops::Triangle);
+                let (w, h) = constrain_size(orig.width(), orig.height(), size);
+                let resized = image::imageops::resize(&orig, w, h, image::imageops::Triangle);
 
-            let img = resized.clone();
-            let mut decoder = rqrr::PreparedImage::prepare(img);
-            let codes = decoder.detect_grids();
+                let img = resized.clone();
+                let mut decoder = rqrr::PreparedImage::prepare(img);
+                let codes = decoder.detect_grids();
 
-            for code in codes {
-                match code.decode() {
-                    Ok((_meta, content)) => { return content; },
-                    _ => {}
+                for code in codes {
+                    match code.decode() {
+                        Ok((_meta, content)) => { return content; },
+                        _ => {}
+                    }
                 }
-            }
 
 
                 let img = resized.clone();
@@ -275,30 +276,31 @@ pub fn read_qr(path : String, max_size : u32) -> String {
                 }
 
 
-            let mut img = resized.clone();
-            let block_radius = (((img.width() * img.height()) as f32).sqrt() / 20.0) as u32;
-            img = imageproc::contrast::adaptive_threshold(&img, block_radius);
+                let mut img = resized.clone();
+                let block_radius = (((img.width() * img.height()) as f32).sqrt() / 20.0) as u32;
+                img = imageproc::contrast::adaptive_threshold(&img.into(), block_radius);
 
-            let mut decoder = rqrr::PreparedImage::prepare(img);
-            let codes = decoder.detect_grids();
+                let mut decoder = rqrr::PreparedImage::prepare(img);
+                let codes = decoder.detect_grids();
 
-            for code in codes {
-                match code.decode() {
-                    Ok((_meta, content)) => { return content; },
-                    _ => {}
+                for code in codes {
+                    match code.decode() {
+                        Ok((_meta, content)) => { return content; },
+                        _ => {}
+                    }
                 }
-            }
 
 
-            let mut img = resized.clone();
-            myprepare(&mut img);
-            let mut decoder = rqrr::PreparedImage::without_preparation(img);
-            let codes = decoder.detect_grids();
+                let mut img = resized.clone();
+                myprepare(&mut img);
+                let mut decoder = rqrr::PreparedImage::without_preparation(img);
+                let codes = decoder.detect_grids();
 
-            for code in codes {
-                match code.decode() {
-                    Ok((_meta, content)) => { return content; },
-                    _ => {}
+                for code in codes {
+                    match code.decode() {
+                        Ok((_meta, content)) => { return content; },
+                        _ => {}
+                    }
                 }
             }
         }
