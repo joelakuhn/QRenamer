@@ -1,4 +1,4 @@
-use image::{self, ImageBuffer};
+use image::{self, GrayImage, ImageBuffer};
 use image::{Luma, GenericImageView, Pixel};
 use image::imageops::colorops::ColorMap;
 use image::io::Reader;
@@ -253,6 +253,26 @@ pub fn read_qr(path : String, max_size : u32) -> String {
                     _ => {}
                 }
             }
+
+
+                let img = resized.clone();
+                match GrayImage::from_vec(img.width(), img.height(), img.into_vec()) {
+                    Some(gray_image) => {
+                        let otsu_level = imageproc::contrast::otsu_level(&gray_image);
+
+                        let img = imageproc::contrast::threshold(&gray_image, otsu_level);
+                        let mut decoder = rqrr::PreparedImage::prepare(img);
+                        let codes = decoder.detect_grids();
+
+                        for code in codes {
+                            match code.decode() {
+                                Ok((_meta, content)) => { return content; },
+                                _ => {}
+                            }
+                        }
+                    },
+                    _ => {}
+                }
 
 
             let mut img = resized.clone();
