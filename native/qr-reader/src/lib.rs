@@ -2,6 +2,7 @@ use image::{self, GrayImage, ImageBuffer};
 use image::{Luma, GenericImageView, Pixel};
 use image::imageops::colorops::ColorMap;
 use image::io::Reader;
+use imageproc::contrast::ThresholdType;
 
 use std::path::Path;
 
@@ -239,29 +240,27 @@ pub fn read_qr(path : String, max_size : u32) -> String {
 
         if img_result.is_some() {
             let orig = img_result.unwrap();
-            for size in [ 900, 1200, 1800 ] {
+            let size = 1800;
 
-                let (w, h) = constrain_size(orig.width(), orig.height(), size);
-                let resized = image::imageops::resize(&orig, w, h, image::imageops::Triangle);
+            let (w, h) = constrain_size(orig.width(), orig.height(), size);
+            let resized = image::imageops::resize(&orig, w, h, image::imageops::Triangle);
 
-                let img = resized.clone();
-                let mut decoder = rqrr::PreparedImage::prepare(img);
-                let codes = decoder.detect_grids();
+            let img = resized.clone();
+            let mut decoder = rqrr::PreparedImage::prepare(img);
+            let codes = decoder.detect_grids();
 
-                for code in codes {
-                    match code.decode() {
-                        Ok((_meta, content)) => { return content; },
-                        _ => {}
-                    }
+            for code in codes {
+                match code.decode() {
+                    Ok((_meta, content)) => { return content; },
+                    _ => {}
                 }
+            }
 
-
+            for otsu_level in [ 50, 100, 150, 200 ] {
                 let img = resized.clone();
                 match GrayImage::from_vec(img.width(), img.height(), img.into_vec()) {
                     Some(gray_image) => {
-                        let otsu_level = imageproc::contrast::otsu_level(&gray_image);
-
-                        let img = imageproc::contrast::threshold(&gray_image, otsu_level);
+                        let img = imageproc::contrast::threshold(&gray_image, otsu_level, ThresholdType::Binary);
                         let mut decoder = rqrr::PreparedImage::prepare(img);
                         let codes = decoder.detect_grids();
 
@@ -274,33 +273,33 @@ pub fn read_qr(path : String, max_size : u32) -> String {
                     },
                     _ => {}
                 }
+            }
 
 
-                let mut img = resized.clone();
-                let block_radius = (((img.width() * img.height()) as f32).sqrt() / 20.0) as u32;
-                img = imageproc::contrast::adaptive_threshold(&img.into(), block_radius);
+            let mut img = resized.clone();
+            let block_radius = (((img.width() * img.height()) as f32).sqrt() / 20.0) as u32;
+            img = imageproc::contrast::adaptive_threshold(&img.into(), block_radius);
 
-                let mut decoder = rqrr::PreparedImage::prepare(img);
-                let codes = decoder.detect_grids();
+            let mut decoder = rqrr::PreparedImage::prepare(img);
+            let codes = decoder.detect_grids();
 
-                for code in codes {
-                    match code.decode() {
-                        Ok((_meta, content)) => { return content; },
-                        _ => {}
-                    }
+            for code in codes {
+                match code.decode() {
+                    Ok((_meta, content)) => { return content; },
+                    _ => {}
                 }
+            }
 
 
-                let mut img = resized.clone();
-                myprepare(&mut img);
-                let mut decoder = rqrr::PreparedImage::without_preparation(img);
-                let codes = decoder.detect_grids();
+            let mut img = resized.clone();
+            myprepare(&mut img);
+            let mut decoder = rqrr::PreparedImage::without_preparation(img);
+            let codes = decoder.detect_grids();
 
-                for code in codes {
-                    match code.decode() {
-                        Ok((_meta, content)) => { return content; },
-                        _ => {}
-                    }
+            for code in codes {
+                match code.decode() {
+                    Ok((_meta, content)) => { return content; },
+                    _ => {}
                 }
             }
         }
