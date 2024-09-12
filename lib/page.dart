@@ -246,8 +246,7 @@ class PageState extends State<QRenamerPage> {
         children: [
           Container(padding: EdgeInsets.all(12), child: Text( _pctComplete < 0 ? "" : "$_pctComplete%", style: TextStyle(color: UIColors.text))),
           Spacer(),
-          ButtonBar(
-            layoutBehavior: ButtonBarLayoutBehavior.padded,
+          OverflowBar(
             children: [
               TextButton(
                 style: TextButton.styleFrom(
