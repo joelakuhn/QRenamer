@@ -202,7 +202,16 @@ class FileTableWidgetState extends State<FileTableWidget> {
   }
 
   List<TableRow> _tableRows() {
-    return _files.map((f) {
+    var rows = [ TableRow(
+      children: [
+        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text(""))),
+        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text(""))),
+        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text("File Name", style: TextStyle(color: Colors.white)))),
+        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text("QR Data", style: TextStyle(color: Colors.white)))),
+        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text("New File Name", style: TextStyle(color: Colors.white)))),
+      ]
+    ) ];
+    rows.addAll(_files.map((f) {
       return TableRow(
         children: [
           TableCell(
@@ -247,7 +256,8 @@ class FileTableWidgetState extends State<FileTableWidget> {
           )
         ]
       );
-    }).toList();
+    }));
+    return rows;
   }
 
   Widget _table() {
