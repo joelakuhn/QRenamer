@@ -5,6 +5,7 @@ import 'package:path/path.dart' as Path;
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:qrenamer/lazy-image.dart';
+import 'package:zoom_widget/zoom_widget.dart';
 
 import 'qr-indicator-widget.dart';
 import 'qr-input-widget.dart';
@@ -54,7 +55,21 @@ class FileTableWidgetState extends State<FileTableWidget> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(file.name),
-          content: Image.file(IO.File(file.path), filterQuality: FilterQuality.medium,),
+          content: SizedBox.fromSize(
+            size: Size(400.0, 600.0),
+            child:  Zoom(
+              initTotalZoomOut: true,
+              maxScale: 10.0,
+              child: Center(
+                child: Image.file(
+                  width: 400.0,
+                  height: 600.0,
+                  IO.File(file.path),
+                  filterQuality: FilterQuality.medium,
+                ),
+              ),
+            ),
+          ),
           actions: <Widget>[
             TextButton(
               style: TextButton.styleFrom(
