@@ -244,8 +244,16 @@ class PageState extends State<QRenamerPage> {
       color: UIColors.gray1,
       child: Row(
         children: [
-          Container(padding: EdgeInsets.all(12), child: Text( _pctComplete < 0 ? "" : "$_pctComplete%", style: TextStyle(color: UIColors.text))),
-          Spacer(),
+          Container(padding: EdgeInsets.all(12), width: 70.0, child: Text( _pctComplete < 0 ? "" : "$_pctComplete%", style: TextStyle(color: UIColors.text))),
+          Expanded(
+            child: LinearProgressIndicator(
+              value: _pctComplete.toDouble() / 100.0,
+              backgroundColor: _pctComplete < 0 ? Colors.transparent : UIColors.gray4,
+              valueColor: AlwaysStoppedAnimation(UIColors.green1),
+              minHeight: 12,
+            )
+          ),
+          Container(width: 50),
           OverflowBar(
             children: [
               TextButton(
