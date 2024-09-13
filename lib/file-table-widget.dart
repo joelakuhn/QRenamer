@@ -264,7 +264,10 @@ class FileTableWidgetState extends State<FileTableWidget> {
     return Expanded(
       child: Container(
         color: _parent.isDropping ? UIColors.green1 : UIColors.gray2,
-        child: Scrollbar(
+        child: RawScrollbar(
+          trackVisibility: true,
+          thumbVisibility: true,
+          trackColor: Colors.white10,
           child: SingleChildScrollView(
             controller: _pageScrollController,
             child: Table(
