@@ -61,7 +61,6 @@ class StringBrigade {
       var maybeValue = _prev!.checkbehind();
       if (maybeValue != "") {
         _value = maybeValue;
-        _isset = true;
         changeEvent.emit();
       }
       return maybeValue;
