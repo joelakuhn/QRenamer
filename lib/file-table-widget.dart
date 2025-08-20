@@ -73,12 +73,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
                     ),
                   )
                 ),
-                TextField(
-                  controller: file.controller,
-                  decoration: InputDecoration(
-                    hint: Text("QR Data", style: TextStyle(color: Colors.grey))
-                  ),
-                )
+                QRInputWidget(file, placeholder: "QR Data", color: Colors.black),
               ],
             ),
           ),
@@ -95,7 +90,9 @@ class FileTableWidgetState extends State<FileTableWidget> {
                 textStyle: Theme.of(context).textTheme.labelLarge,
               ),
               child: const Text('Close'),
-              onPressed: () { Navigator.of(context).pop(); },
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
           ],
         );
