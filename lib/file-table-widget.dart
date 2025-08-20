@@ -57,17 +57,29 @@ class FileTableWidgetState extends State<FileTableWidget> {
           title: Text(file.name),
           content: SizedBox.fromSize(
             size: Size(400.0, 600.0),
-            child:  Zoom(
-              initTotalZoomOut: true,
-              maxScale: 10.0,
-              child: Center(
-                child: Image.file(
-                  width: 400.0,
-                  height: 600.0,
-                  IO.File(file.path),
-                  filterQuality: FilterQuality.medium,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Zoom(
+                    initTotalZoomOut: true,
+                    maxScale: 10.0,
+                    child: Center(
+                      child: Image.file(
+                        width: 400.0,
+                        height: 600.0,
+                        IO.File(file.path),
+                        filterQuality: FilterQuality.medium,
+                      ),
+                    ),
+                  )
                 ),
-              ),
+                TextField(
+                  controller: file.controller,
+                  decoration: InputDecoration(
+                    hint: Text("QR Data", style: TextStyle(color: Colors.grey))
+                  ),
+                )
+              ],
             ),
           ),
           actions: <Widget>[
