@@ -187,26 +187,6 @@ pub fn read_qr(path : String, max_size : u32) -> String {
                 }
             }
 
-            for otsu_level in [ 50, 100, 150, 200 ] {
-                let img = resized.clone();
-                match GrayImage::from_vec(img.width(), img.height(), img.into_vec()) {
-                    Some(gray_image) => {
-                        let img = imageproc::contrast::threshold(&gray_image, otsu_level, ThresholdType::Binary);
-                        let mut decoder = rqrr::PreparedImage::prepare(img);
-                        let codes = decoder.detect_grids();
-
-                        for code in codes {
-                            match code.decode() {
-                                Ok((_meta, content)) => { return content; },
-                                _ => {}
-                            }
-                        }
-                    },
-                    _ => {}
-                }
-            }
-
-
             let mut img = resized.clone();
             let block_radius = (((img.width() * img.height()) as f32).sqrt() / 20.0) as u32;
             img = imageproc::contrast::adaptive_threshold(&img.into(), block_radius);
