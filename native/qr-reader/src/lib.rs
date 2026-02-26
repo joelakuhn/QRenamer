@@ -189,7 +189,7 @@ pub fn read_qr(path : String, max_size : u32) -> String {
 
             let mut img = resized.clone();
             let block_radius = (((img.width() * img.height()) as f32).sqrt() / 20.0) as u32;
-            img = imageproc::contrast::adaptive_threshold(&img.into(), block_radius);
+            img = imageproc::contrast::adaptive_threshold(&img.into(), block_radius, 0);
 
             let mut decoder = rqrr::PreparedImage::prepare(img);
             let codes = decoder.detect_grids();
