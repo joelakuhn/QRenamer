@@ -1,8 +1,7 @@
-use image::{self, GrayImage, ImageBuffer};
+use image::{self, ImageBuffer};
 use image::Luma;
 use image::imageops::colorops::ColorMap;
 use image::ImageReader;
-use imageproc::contrast::ThresholdType;
 
 use std::path::Path;
 
