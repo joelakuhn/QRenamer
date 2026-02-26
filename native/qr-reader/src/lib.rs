@@ -151,7 +151,7 @@ pub fn myprepare(buf : &mut ImageBuffer<Luma<u8>, Vec<u8>>) {
 
 pub fn read_qr(path : String, max_size : u32) -> String {
     let ext = Path::new(&path).extension();
-    let size = max_size.max(1800);
+    let size = max_size.max(2400);
 
     if ext.is_some() {
 
