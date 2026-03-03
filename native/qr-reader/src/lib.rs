@@ -1,7 +1,9 @@
-use image::{self, ImageBuffer};
+use bardecoder::prepare::BlockedMean;
+use image::{self, DynamicImage, GrayImage};
 use image::Luma;
 use image::imageops::colorops::ColorMap;
 use image::ImageReader;
+use imageproc::contrast::ThresholdType;
 
 use std::path::Path;
 
@@ -126,26 +128,17 @@ fn open_image(path : &String) -> Option<image::ImageBuffer<image::Luma<u8>, std:
     return None;
 }
 
-pub fn myprepare(buf : &mut ImageBuffer<Luma<u8>, Vec<u8>>) {
-    let w = buf.width();
-    let h = buf.height();
+pub fn try_decode(img : GrayImage) -> Option<String> {
+    let mut decoder = rqrr::PreparedImage::prepare(img);
+    let codes = decoder.detect_grids();
 
-    for y in 0..h {
-        let mut row_total = 0u32;
-        for x in 0..w {
-            row_total += buf.get_pixel(x, y).0[0] as u32;
-        }
-        let row_average = (row_total / w) as u8;
-
-        for x in 0..w {
-            let fill = if buf.get_pixel(x, y).0[0] < row_average {
-                0x01
-            } else {
-                0x00
-            };
-            buf.put_pixel(x, y, Luma::<u8>([fill]));
+    for code in codes {
+        match code.decode() {
+            Ok((_meta, content)) => { return Some(content); },
+            _ => {}
         }
     }
+    return None;
 }
 
 pub fn read_qr(path : String, max_size : u32) -> String {
@@ -175,40 +168,32 @@ pub fn read_qr(path : String, max_size : u32) -> String {
             let (w, h) = constrain_size(orig.width(), orig.height(), size);
             let resized = image::imageops::resize(&orig, w, h, image::imageops::Triangle);
 
+            // Default Preparation
             let img = resized.clone();
-            let mut decoder = rqrr::PreparedImage::prepare(img);
-            let codes = decoder.detect_grids();
+            if let Some(content) = try_decode(img) { return content; }
 
-            for code in codes {
-                match code.decode() {
-                    Ok((_meta, content)) => { return content; },
-                    _ => {}
-                }
-            }
-
+            // With Adaptive Threshold
             let mut img = resized.clone();
             let block_radius = (((img.width() * img.height()) as f32).sqrt() / 20.0) as u32;
             img = imageproc::contrast::adaptive_threshold(&img.into(), block_radius, 0);
+            if let Some(content) = try_decode(img) { return content; }
 
-            let mut decoder = rqrr::PreparedImage::prepare(img);
-            let codes = decoder.detect_grids();
-
-            for code in codes {
-                match code.decode() {
-                    Ok((_meta, content)) => { return content; },
-                    _ => {}
-                }
+            // With Increasing Otsu Thresholds on Equalized Image
+            let equalized = imageproc::contrast::equalize_histogram(&resized);
+            for otsu_level in [ 50, 100, 150, 200 ] {
+                let img = imageproc::contrast::threshold(&equalized, otsu_level, ThresholdType::Binary);
+                if let Some(content) = try_decode(img) { return content; }
             }
 
-
-            let mut img = resized.clone();
-            myprepare(&mut img);
-            let mut decoder = rqrr::PreparedImage::without_preparation(img);
-            let codes = decoder.detect_grids();
-
-            for code in codes {
-                match code.decode() {
-                    Ok((_meta, content)) => { return content; },
+            // Try with Bardecoder
+            let dynamic_image = DynamicImage::ImageLuma8(resized);
+            let mut decoder_builder = bardecoder::default_builder();
+            decoder_builder.prepare(Box::new(BlockedMean::new(7, 9)));
+            let decoder = decoder_builder.build();
+            let results = decoder.decode(&dynamic_image);
+            for result in results {
+                match result {
+                    Ok(content) => { return content; },
                     _ => {}
                 }
             }
