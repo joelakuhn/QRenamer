@@ -24,6 +24,9 @@ class QRReaderFFI {
     if (Platform.isMacOS) {
       libraryPath = 'libqr_reader_ffi.dylib';
     }
+    if (Platform.isLinux) {
+      libraryPath = 'libqr_reader_ffi.so';
+    }
     else if (Platform.isWindows) {
       var currentPath = Path.dirname(Platform.resolvedExecutable);
       libraryPath = Path.join(currentPath, 'qr_reader_ffi.dll');
