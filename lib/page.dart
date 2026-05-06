@@ -27,6 +27,7 @@ class PageState extends State<QRenamerPage> {
   bool isDropping = false;
   bool _renameApplied = false;
   bool isRunning = false;
+  bool isShowingSettings = false;
   int _pctComplete = -1;
   final _fileManager = FileManager.instance;
   List<UIFile> _files = FileManager.instance.files;
@@ -94,6 +95,8 @@ class PageState extends State<QRenamerPage> {
   }
 
   void _applyRename() {
+    if (!_canApplyRename()) return;
+
     for (var file in _fileManager.files) {
       if (file.newPath != file.path) {
         var f = IO.File(file.path);
@@ -108,10 +111,12 @@ class PageState extends State<QRenamerPage> {
     });
   }
 
+  bool _canApplyRename() {
+    return !isRunning && _fileManager.hasFiles && _fileManager.files.last.decoded;
+  }
+
   void _undo() {
     for (var file in _fileManager.files) {
-      file.processed = false;
-      file.decoded = false;
       if (file.path != file.originalPath) {
         var f = IO.File(file.path);
         f.rename(file.originalPath);
@@ -119,19 +124,8 @@ class PageState extends State<QRenamerPage> {
       }
     }
     setState(() {
-      _pctComplete = -1;
       _renameApplied = false;
     });
-    _fileManager.changeEvent.emit();
-  }
-
-  void _toggleCaseTransform() {
-    for (var file in _fileManager.files) {
-      file.controller.text = file.controller.text.split(RegExp("\\s+"))
-        .map((e) => e.length > 0 ? e[0].toUpperCase() + e.substring(1).toLowerCase() : e)
-        .join(" ");
-      file.qr = file.controller.text;
-    }
     _fileManager.changeEvent.emit();
   }
 
@@ -143,22 +137,19 @@ class PageState extends State<QRenamerPage> {
 
 
   Widget topBar() {
+    if (_files.isEmpty) {
+      return Container( child: null );
+    }
     return Container(
       color: UIColors.gray2,
       child: Row(
         children: [
+          Spacer(flex: 1),
           BarButton(
             text: "Close Files",
             icon: Icons.close,
             condition: () => _files.length > 0 && !isRunning,
             onPressed: _closeFiles,
-          ),
-          Spacer(flex: 1),
-          BarButton(
-            text: "Convert to Title Case",
-            icon: Icons.format_size,
-            condition: () => _files.length > 0 && !isRunning,
-            onPressed: _toggleCaseTransform,
           ),
         ]
       )
@@ -221,6 +212,16 @@ class PageState extends State<QRenamerPage> {
     );
   }
 
+  Widget _formatControls() {
+    if (_files.length == 0 || !isShowingSettings) return Container();
+    return Column(
+      children: [
+        formatBar(),
+        formatGenerators(),
+      ]
+    );
+  }
+
   Image readImage(String path) {
     if (_imgCache.containsKey(path)) {
       return _imgCache[path]!;
@@ -240,69 +241,91 @@ class PageState extends State<QRenamerPage> {
   }
 
   Widget bottomBar() {
+    if (_files.isEmpty) {
+      return Container( child: null );
+    }
     return Container(
       color: UIColors.gray1,
-      child: Row(
-        children: [
-          Container(padding: EdgeInsets.all(12), width: 70.0, child: Text( _pctComplete < 0 ? "" : "$_pctComplete%", style: TextStyle(color: UIColors.text))),
-          Expanded(
-            child: LinearProgressIndicator(
-              value: _pctComplete.toDouble() / 100.0,
-              backgroundColor: _pctComplete < 0 ? Colors.transparent : UIColors.gray4,
-              valueColor: AlwaysStoppedAnimation(UIColors.green1),
-              minHeight: 12,
-            )
-          ),
-          Container(width: 50),
-          OverflowBar(
-            children: [
-              TextButton(
-                style: TextButton.styleFrom(
-                  foregroundColor: _fileManager.hasFiles ? UIColors.text : UIColors.disabled, backgroundColor: UIColors.gray3,
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  isShowingSettings = !isShowingSettings;
+                });
+              },
+              icon: Icon(Icons.settings),
+              style: IconButton.styleFrom(foregroundColor: isRunning || !_fileManager.hasFiles ? UIColors.disabled : UIColors.text),
+            ),
+            Container( width: 10 ),
+            Container(padding: EdgeInsets.all(12), width: 70.0, child: Text( _pctComplete < 0 ? "" : "$_pctComplete%", style: TextStyle(color: UIColors.text))),
+            Expanded(
+              child: LinearProgressIndicator(
+                value: _pctComplete.toDouble() / 100.0,
+                backgroundColor: _pctComplete < 0 ? Colors.transparent : UIColors.gray4,
+                valueColor: AlwaysStoppedAnimation(UIColors.green1),
+                minHeight: 12,
+              )
+            ),
+            Row(
+              children: [
+                Container(width: 40),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: _fileManager.hasFiles ? UIColors.text : UIColors.disabled, backgroundColor: UIColors.gray3,
+                  ),
+                  child: Container(
+                    width: 70,
+                    child: Row(
+                      children: [
+                        Icon(isRunning ? Icons.stop_rounded : Icons.play_arrow),
+                        Text(isRunning ? ' Stop' : ' Scan'),
+                      ]
+                    )
+                  ),
+                  onPressed: _toggleRunning,
                 ),
-                child: Container(
-                  width: 70,
-                  child: Row(
-                    children: [
-                      Icon(isRunning ? Icons.stop_rounded : Icons.play_arrow),
-                      Text(isRunning ? ' Stop' : ' Scan'),
-                    ]
+                Container(
+                  width: 10
+                ),
+                Tooltip(
+                  message: _renameApplied ? "Restore the original file names." : "Save the updated file names.",
+                  child: TextButton(
+                    style: _renameApplied
+                      ? TextButton.styleFrom(foregroundColor: UIColors.text, minimumSize: Size(100, 45))
+                      : TextButton.styleFrom(foregroundColor: _canApplyRename() ? UIColors.text : UIColors.disabled, minimumSize: Size(100, 45)),
+                    child: Row(
+                      children: [
+                        Icon(_renameApplied ? Icons.undo : Icons.check_outlined),
+                        Text(_renameApplied ? " Undo" : " Apply"),
+                      ]
+                    ),
+                    onPressed: _renameApplied ? _undo : _applyRename,
+                  ),
+                ),
+                Container(
+                  width: 10
+                ),
+                Tooltip(
+                  message: "Close all open files.",
+                  child: TextButton(
+                    style: TextButton.styleFrom(foregroundColor: UIColors.text),
+                    child: Row(
+                      children: [
+                        Icon(Icons.close),
+                        Text(" Close"),
+                      ]
+                    ),
+                    onPressed: _closeFiles,
                   )
                 ),
-                onPressed: _toggleRunning,
-              ),
-              Container(
-                width: 10
-              ),
-              TextButton(
-                style: TextButton.styleFrom(foregroundColor: isRunning || !_fileManager.hasFiles ? UIColors.disabled : UIColors.text),
-                child: Row(
-                  children: [
-                    Icon(Icons.check_outlined),
-                    Text(" Apply"),
-                  ]
-                ),
-                onPressed: () { if (!isRunning) _applyRename(); },
-              ),
-              Container(
-                width: 10
-              ),
-              TextButton(
-                style: TextButton.styleFrom(foregroundColor: isRunning || !_fileManager.hasFiles || !_renameApplied ? UIColors.disabled : UIColors.text),
-                child: Row(
-                  children: [
-                    Icon(Icons.undo),
-                    Text(" Undo"),
-                  ]
-                ),
-                onPressed: () { if (!isRunning && _renameApplied) _undo(); },
-              ),
-              Container(
-                width: 10
-              ),
-            ]
-          )
-        ]
+                Container( width: 10),
+              ]
+            )
+          ]
+        )
       )
     );
   }
@@ -314,10 +337,9 @@ class PageState extends State<QRenamerPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          topBar(),
-          formatBar(),
-          formatGenerators(),
+          // topBar(),
           _fileTableWidget,
+          _formatControls(),
           bottomBar(),
         ]
       ),

@@ -210,17 +210,19 @@ class FileTableWidgetState extends State<FileTableWidget> {
     );
   }
 
+  Widget _headerCell(Widget child) {
+    return Container(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+        child: child,
+      ),
+    );
+  }
+
+  
+
   List<TableRow> _tableRows() {
-    var rows = [ TableRow(
-      children: [
-        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text(""))),
-        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text(""))),
-        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text("File Name", style: TextStyle(color: Colors.white)))),
-        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text("QR Data", style: TextStyle(color: Colors.white)))),
-        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 12), child: Text("New File Name", style: TextStyle(color: Colors.white)))),
-      ]
-    ) ];
-    rows.addAll(_files.map((f) {
+    return _files.map((f) {
       return TableRow(
         children: [
           TableCell(
@@ -265,31 +267,60 @@ class FileTableWidgetState extends State<FileTableWidget> {
           )
         ]
       );
-    }));
-    return rows;
+    }).toList();
+  }
+
+  Widget _tableHeaders() {
+    return Container(
+      color: UIColors.gray1,
+      child: Table(
+        columnWidths: {
+          0: FixedColumnWidth(40),
+          1: FixedColumnWidth(80),
+        },
+        children: [
+          TableRow(
+            children: [
+              TableCell(child: _headerCell(Text(""))),
+              TableCell(child: _headerCell(Text(""))),
+              TableCell(child: _headerCell(Text("File Name", style: TextStyle(color: Colors.white)))),
+              TableCell(child: _headerCell(Text("QR Data", style: TextStyle(color: Colors.white)))),
+              TableCell(child: _headerCell(Text("New File Name", style: TextStyle(color: Colors.white)))),
+            ]
+          )
+        ]
+      )
+    );
   }
 
   Widget _table() {
     return Expanded(
-      child: Container(
-        color: _parent.isDropping ? UIColors.green1 : UIColors.gray2,
-        child: RawScrollbar(
-          trackVisibility: true,
-          thumbVisibility: true,
-          trackColor: Colors.white10,
-          child: SingleChildScrollView(
-            controller: _pageScrollController,
-            child: Table(
-              columnWidths: {
-                0: FixedColumnWidth(50),
-                1: FixedColumnWidth(80),
-              },
-              border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
-              children: _tableRows(),
+      child: Column(
+        children: [
+          _tableHeaders(),
+          Expanded(
+            child: Container(
+              color: _parent.isDropping ? UIColors.green1 : UIColors.gray2,
+              child: RawScrollbar(
+                trackVisibility: true,
+                thumbVisibility: true,
+                trackColor: Colors.white10,
+                child: SingleChildScrollView(
+                  controller: _pageScrollController,
+                  child: Table(
+                    columnWidths: {
+                      0: FixedColumnWidth(40),
+                      1: FixedColumnWidth(80),
+                    },
+                    border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
+                    children: _tableRows(),
+                  )
+                ),
+                controller: _pageScrollController,
+              )
             )
-          ),
-          controller: _pageScrollController,
-        )
+          )
+        ]
       )
     );
   }
