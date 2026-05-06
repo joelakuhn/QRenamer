@@ -5,8 +5,8 @@ import 'ui-colors.dart';
 
 class QRInputWidget extends StatefulWidget {
   late final UIFile _file;
-  String? _placeholder;
-  Color? _color;
+  late final String? _placeholder;
+  late final Color? _color;
 
   QRInputWidget(UIFile file, {String? placeholder, Color? color}) {
     _file = file;
@@ -21,7 +21,7 @@ class QRInputWidgetState extends State<QRInputWidget> {
   late UIFile _file;
   String? _placeholder;
   Color? _color;
-
+  
   QRInputWidgetState(UIFile file, String? placeholder, Color? color) {
     _file = file;
     _placeholder = placeholder;
