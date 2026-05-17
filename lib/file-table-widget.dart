@@ -5,7 +5,6 @@ import 'package:path/path.dart' as Path;
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:qrenamer/lazy-image.dart';
-import 'package:zoom_widget/zoom_widget.dart';
 
 import 'qr-indicator-widget.dart';
 import 'qr-input-widget.dart';
@@ -16,6 +15,7 @@ import 'bar-button.dart';
 import 'ui-colors.dart';
 import 'qr-result-widget.dart';
 import 'file-manager.dart';
+import 'image-dialog.dart';
 
 class FileTableWidget extends StatefulWidget {
   late final FileTableWidgetState _state;
@@ -43,61 +43,6 @@ class FileTableWidgetState extends State<FileTableWidget> {
     _fileManager.changeEvent.bind(this, () {
       setState(() { _files = _fileManager.files; });
     });
-  }
-
-  _reveal(String path) {
-    IO.Process.run('/usr/bin/env', ['open', '-R', path]);
-  }
-
-  Future<void> _dialogBuilder(BuildContext context, UIFile file) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(file.name),
-          content: SizedBox.fromSize(
-            size: Size(400.0, 600.0),
-            child: Column(
-              children: [
-                Expanded(
-                  child: Zoom(
-                    initTotalZoomOut: true,
-                    maxScale: 10.0,
-                    child: Center(
-                      child: Image.file(
-                        width: 400.0,
-                        height: 600.0,
-                        IO.File(file.path),
-                        filterQuality: FilterQuality.medium,
-                      ),
-                    ),
-                  )
-                ),
-                QRInputWidget(file, placeholder: "QR Data", color: Colors.black),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Show in Finder'),
-              onPressed: () { _reveal(file.path); },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _sortByFileNumber(List<UIFile> files) {
@@ -241,7 +186,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
                 height: 120,
                 color: UIColors.gray3,
               ),
-              onTap: () => _dialogBuilder(context, f),
+              onTap: () => ImageDialog.show(context, f),
             )
           ),
           TableCell(
@@ -251,7 +196,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
               alignment: Alignment.centerLeft,
               child: InkWell(
                 child: Text(f.name, style: TextStyle(color: UIColors.text)),
-                onTap: () => _dialogBuilder(context, f),
+                onTap: () => ImageDialog.show(context, f),
               )
             )
           ),

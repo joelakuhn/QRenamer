@@ -45,8 +45,11 @@ class QRInputWidgetState extends State<QRInputWidget> {
       decoration: InputDecoration(
         contentPadding: EdgeInsets.zero,
         hint: _placeholder == null
-        ? null
-        : Text("QR Data", style: TextStyle(color: Colors.grey)),
+          ? null
+          : Text(_placeholder!, style: TextStyle(color: Colors.grey)),
+        border: UnderlineInputBorder(borderSide: BorderSide(color: UIColors.gray4)),
+        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: UIColors.gray4)),
+        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: UIColors.blue)),
       ),
     );
   }
