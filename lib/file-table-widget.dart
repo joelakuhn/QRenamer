@@ -228,15 +228,19 @@ class FileTableWidgetState extends State<FileTableWidget> {
           TableCell(
             verticalAlignment: TableCellVerticalAlignment.middle,
             child: Container(
-              width: 20,
               padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.center,
               child: QRIndicatorWidget(f),
             )
           ),
           TableCell(
             child: InkWell(
-              child: LazyImage(f.path),
+              child: Container(
+                child: LazyImage(f.path),
+                width: 120,
+                height: 120,
+                color: UIColors.gray3,
+              ),
               onTap: () => _dialogBuilder(context, f),
             )
           ),
@@ -254,7 +258,7 @@ class FileTableWidgetState extends State<FileTableWidget> {
           TableCell(child: Container(
             padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
             alignment: Alignment.centerLeft,
-            height: 80,
+            height: 120,
             child: QRInputWidget(f),
           )),
           TableCell(
@@ -275,8 +279,8 @@ class FileTableWidgetState extends State<FileTableWidget> {
       color: UIColors.gray1,
       child: Table(
         columnWidths: {
-          0: FixedColumnWidth(40),
-          1: FixedColumnWidth(80),
+          0: FixedColumnWidth(50),
+          1: FixedColumnWidth(120),
         },
         children: [
           TableRow(
@@ -309,8 +313,8 @@ class FileTableWidgetState extends State<FileTableWidget> {
                   controller: _pageScrollController,
                   child: Table(
                     columnWidths: {
-                      0: FixedColumnWidth(40),
-                      1: FixedColumnWidth(80),
+                      0: FixedColumnWidth(50),
+                      1: FixedColumnWidth(120),
                     },
                     border: TableBorder(horizontalInside: BorderSide(width: 1, color: UIColors.green1)),
                     children: _tableRows(),

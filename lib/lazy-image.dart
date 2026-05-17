@@ -23,7 +23,7 @@ class LazyImageState extends State<LazyImage> {
   static const int CONCURRENCY = 50;
   static int loading = 0;
   static List<LazyImageState> waiting = [];
-  static Image transparentPixel = Image.memory(base64Decode("R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAIBAAA="));
+  static Image transparentPixel = Image.memory(base64Decode("R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAIBAAA="), width: 120, height: 120);
 
   LazyImageState(String path) {
     this.path = path;
@@ -31,18 +31,22 @@ class LazyImageState extends State<LazyImage> {
     maybeLoad();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    img.image.evict();
+  }
+
   void maybeLoad() {
     if (LazyImageState.loading < CONCURRENCY) {
       LazyImageState.loading += 1;
       IO.File(this.path).readAsBytes().then((bytes) {
+        var original = MemoryImage(bytes);
+        var resized = ResizeImage(original, height: 120);
+        original.evict();
         try {
           setState(() {
-            this.img = Image.memory(bytes,
-              height: 80,
-              cacheHeight: 80,
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.none,
-            );
+            this.img = Image(image: resized);
           });
         }
         catch (e) {
